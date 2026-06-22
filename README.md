@@ -31,3 +31,7 @@ docker compose up -d --build
 ## 资质查询功能
 
 Sub-I 侧边栏 → **项目检测人员授权资质查询** → 按工号或仪器查询授权/培训/考核资质。
+
+## 交接文档
+
+完整整合说明见 [`项目整合交接文档.md`](./项目整合交接文档.md)。Sub-I 资料库功能细节见 [`subi_knowledge_platform/项目交接总结.md`](./subi_knowledge_platform/项目交接总结.md)。
