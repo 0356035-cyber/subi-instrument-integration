@@ -1,0 +1,72 @@
+# 统一管理 instrument-training-home 与 subi_knowledge_platform
+# 启动：在 C:/projects 目录执行 docker compose up -d --build
+
+services:
+  instrument-training-home-backend:
+    build:
+      context: ./instrument-training-home
+      dockerfile: Dockerfile.backend
+    container_name: instrument_train_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./instrument-training-home/data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - projects-network
+
+  instrument-training-home-frontend:
+    build:
+      context: ./instrument-training-home
+      dockerfile: Dockerfile.frontend
+    container_name: instrument_train_frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://instrument-training-home-backend:8000
+    depends_on:
+      - instrument-training-home-backend
+    restart: unless-stopped
+    networks:
+      - projects-network
+
+  subi-backend:
+    build:
+      context: ./subi_knowledge_platform
+      dockerfile: Dockerfile.backend
+    container_name: subi_backend
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./subi_knowledge_platform/data:/app/data
+      - ./subi_knowledge_platform/uploads:/app/uploads
+    env_file:
+      - path: ./subi_knowledge_platform/.env
+        required: false
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Docker 内网地址，覆盖 .env 中的 localhost
+      - INSTRUMENT_TRAINING_API_BASE=http://instrument-training-home-backend:8000/api/v1
+    depends_on:
+      - instrument-training-home-backend
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - projects-network
+
+networks:
+  projects-network:
+    driver: bridge
