@@ -15,6 +15,14 @@ subi_knowledge_platform\启动资料库系统.bat
 
 或双击 `start-local.bat`（跳转至上述脚本）。
 
+### Grok Build（AI 编程助手）
+
+```bat
+启动GrokBuild.bat
+```
+
+首次使用请复制 `grok-proxy.env.example` 为 `grok-proxy.env`，按本地代理软件（Clash / v2rayN 等）修改端口。
+
 - Sub-I 前端：http://localhost:8510
 - Sub-I API：http://127.0.0.1:8001/docs
 - 培训系统 API：http://127.0.0.1:8000/docs
