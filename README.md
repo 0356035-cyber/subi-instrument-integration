@@ -7,13 +7,26 @@
 | [subi_knowledge_platform](./subi_knowledge_platform/) | [subi_knowledge_platform](https://github.com/0356035-cyber/subi_knowledge_platform) | Sub-I 资料库（BFF + Streamlit） |
 | [instrument-training-home](./instrument-training-home/) | [instrument-training-home](https://github.com/0356035-cyber/instrument-training-home) | 仪器培训与授权系统 |
 
-## 快速启动（本地）
+## 快速启动
+
+### 方式 A：本地 Python（推荐日常开发）
 
 ```bat
 subi_knowledge_platform\启动资料库系统.bat
 ```
 
-或双击 `start-local.bat`（跳转至上述脚本）。
+或双击 `start-local.bat`（跳转至上述脚本）。脚本会启动 8000 + 8001 + 8510，并在结束时做健康检查。
+
+### 方式 B：Docker 后端 + 本地前端（推荐稳定部署）
+
+```bat
+start-docker.bat
+subi_knowledge_platform\启动资料库系统.bat
+```
+
+`start-docker.bat` 会执行 `docker compose up -d --build`。**Git 拉取更新后若使用 Docker，务必重新运行该脚本重建镜像**（避免依赖版本不一致导致登录 500）。
+
+默认登录：**工号 3267，密码 123456**。
 
 ### Grok Build（AI 编程助手）
 
