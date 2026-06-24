@@ -17,6 +17,14 @@ uploads/
 backups/
 *.log
 
+# 子项目为独立 Git 仓库，不纳入本仓库版本控制
+instrument-training-home/
+subi_knowledge_platform/
+
+# 本地临时/旧版文件
+app.py
+batch-test.json
+
 # IDE & OS
 .idea/
 .vscode/

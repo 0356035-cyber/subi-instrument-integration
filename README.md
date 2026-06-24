@@ -1,57 +1,71 @@
 # Sub-I 与仪器培训系统整合工作区
 
-本目录包含两个子项目及统一部署配置：
+本目录（`C:\projects`）是 **Docker Compose 统一部署仓库**，与两个子项目代码仓库并列存放。
 
 | 子项目 | 仓库 | 说明 |
 |--------|------|------|
-| [subi_knowledge_platform](./subi_knowledge_platform/) | [subi_knowledge_platform](https://github.com/0356035-cyber/subi_knowledge_platform) | Sub-I 资料库（BFF + Streamlit） |
+| [subi_knowledge_platform](./subi_knowledge_platform/) | [subi_knowledge_platform](https://github.com/0356035-cyber/subi_knowledge_platform) | Sub-I 资料库 |
 | [instrument-training-home](./instrument-training-home/) | [instrument-training-home](https://github.com/0356035-cyber/instrument-training-home) | 仪器培训与授权系统 |
+| **本目录** | [subi-instrument-integration](https://github.com/0356035-cyber/subi-instrument-integration) | Compose 编排、启动脚本、交接文档 |
 
-## 快速启动
+## 目录结构
 
-### 方式 A：本地 Python（推荐日常开发）
-
-```bat
-subi_knowledge_platform\启动资料库系统.bat
+```
+C:\projects\
+├── docker-compose.yml          # 4 个容器统一部署
+├── start-docker.bat            # 推荐启动方式
+├── backup-data.bat / 备份数据.bat
+├── restore-data.bat / 恢复数据.bat
+├── 项目整合交接文档.md
+├── instrument-training-home\   # 独立 Git 仓库
+└── subi_knowledge_platform\    # 独立 Git 仓库
 ```
 
-或双击 `start-local.bat`（跳转至上述脚本）。脚本会启动 8000 + 8001 + 8510，并在结束时做健康检查。
-
-### 方式 B：Docker 全栈部署（推荐稳定部署）
+## 快速启动（家里 / 单位相同）
 
 ```bat
 start-docker.bat
 ```
 
-`start-docker.bat` 会执行 `docker compose up -d --build`，一次性启动培训系统（8000/8501）、Sub-I 后端（8001）与 Sub-I 前端（8510）。**Git 拉取更新后若使用 Docker，务必重新运行该脚本重建镜像**（避免依赖版本不一致导致登录 500）。
+启动后 Docker Desktop 显示 **`projects`** 项目，包含 4 个容器：
 
-默认登录：**工号 3267，密码 123456**。
+| 容器 | 端口 | 用途 |
+|------|------|------|
+| instrument_train_backend | 8000 | 培训 API |
+| instrument_train_frontend | 8501 | 培训管理页面 |
+| subi_backend | 8001 | Sub-I API |
+| subi_frontend | 8510 | Sub-I 资料库 |
 
-### Grok Build（AI 编程助手）
+默认登录：**工号 3267，密码 123456**
 
-```bat
-启动GrokBuild.bat
-```
-
-首次使用请复制 `grok-proxy.env.example` 为 `grok-proxy.env`，按本地代理软件（Clash / v2rayN 等）修改端口。
-
-- Sub-I 前端：http://localhost:8510
-- Sub-I API：http://127.0.0.1:8001/docs
-- 培训系统 API：http://127.0.0.1:8000/docs
-
-## Docker 统一部署
+## 新电脑首次搭建
 
 ```bash
-# 在 C:\projects 目录
-docker compose up -d --build
+git clone https://github.com/0356035-cyber/subi-instrument-integration.git projects
+cd projects
+git clone https://github.com/0356035-cyber/subi_knowledge_platform.git
+git clone https://github.com/0356035-cyber/instrument-training-home.git
 ```
 
-复制 `.env.example` 为 `subi_knowledge_platform/.env` 并填写培训系统服务账号。
+1. 安装 Docker Desktop
+2. 复制 `.env.example` → `subi_knowledge_platform\.env` 并填写服务账号
+3. 用 `恢复数据.bat` 恢复备份（如有）
+4. 运行 `start-docker.bat`
 
-## 资质查询功能
+## 换机同步数据
 
-Sub-I 侧边栏 → **项目检测人员授权资质查询** → 按工号或仪器查询授权/培训/考核资质。
+- **代码**：三个仓库分别 `git pull`
+- **业务数据**：`备份数据.bat` → 拷贝 `backups\` 文件夹 → 新电脑 `恢复数据.bat`
+
+详见 [`项目整合交接文档.md`](./项目整合交接文档.md) §7.5。
+
+## 本地 Python 开发（可选）
+
+```bat
+subi_knowledge_platform\启动资料库系统.bat
+```
 
 ## 交接文档
 
-完整整合说明见 [`项目整合交接文档.md`](./项目整合交接文档.md)。Sub-I 资料库功能细节见 [`subi_knowledge_platform/项目交接总结.md`](./subi_knowledge_platform/项目交接总结.md)。
+- 整合说明：[`项目整合交接文档.md`](./项目整合交接文档.md)
+- Sub-I 功能细节：[`subi_knowledge_platform/项目交接总结.md`](./subi_knowledge_platform/项目交接总结.md)
