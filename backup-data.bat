@@ -8,24 +8,14 @@ echo   Sub-I + Training System Backup
 echo ========================================
 echo.
 
-set "SCRIPT_DIR=%~dp0"
-set "PROJECTS_DIR="
-
-if exist "%SCRIPT_DIR%..\instrument-training-home\data" (
-    for %%I in ("%SCRIPT_DIR%..") do set "PROJECTS_DIR=%%~fI"
-)
-if not defined PROJECTS_DIR if exist "D:\projects\instrument-training-home\data" (
-    set "PROJECTS_DIR=D:\projects"
-)
-if not defined PROJECTS_DIR if exist "C:\projects\instrument-training-home\data" (
-    set "PROJECTS_DIR=C:\projects"
-)
-
+call "%~dp0scripts\resolve-projects-dir.bat"
 if not defined PROJECTS_DIR (
     echo [ERROR] Project folder not found.
     pause
     exit /b 1
 )
+echo Projects: %PROJECTS_DIR%
+echo.
 
 set "TRAIN_DB=%PROJECTS_DIR%\instrument-training-home\data\instrument_training.db"
 set "SUBI_DB=%PROJECTS_DIR%\subi_knowledge_platform\data\subi_knowledge.db"
@@ -35,7 +25,6 @@ set "BACKUP_ROOT=%PROJECTS_DIR%\backups"
 for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-dd_HHmmss'"`) do set "STAMP=%%T"
 set "BACKUP_DIR=%BACKUP_ROOT%\%STAMP%"
 
-echo Projects: %PROJECTS_DIR%
 echo Backup to: %BACKUP_DIR%
 echo.
 echo Files:

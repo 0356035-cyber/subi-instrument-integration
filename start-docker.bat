@@ -2,13 +2,19 @@
 chcp 65001 >nul
 title Sub-I 整合项目 Docker 启动
 
-set "PROJECTS_DIR=C:\projects"
+call "%~dp0scripts\resolve-projects-dir.bat"
+if not defined PROJECTS_DIR (
+    echo [ERROR] 未找到 projects 工作区（需包含 instrument-training-home 与 subi_knowledge_platform）。
+    pause
+    exit /b 1
+)
 cd /d "%PROJECTS_DIR%"
 
 echo ========================================
 echo   Docker 统一部署
 echo   instrument-training-home + Sub-I 全栈
 echo ========================================
+echo 工作目录: %PROJECTS_DIR%
 echo.
 
 docker info >nul 2>&1
