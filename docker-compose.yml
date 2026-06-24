@@ -67,6 +67,35 @@ services:
     networks:
       - projects-network
 
+  subi-frontend:
+    build:
+      context: ./subi_knowledge_platform/frontend
+      dockerfile: Dockerfile
+    container_name: subi_frontend
+    ports:
+      - "8510:8510"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_BASE=http://subi-backend:8001
+    depends_on:
+      subi-backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8510/_stcore/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - projects-network
+
 networks:
   projects-network:
     driver: bridge
