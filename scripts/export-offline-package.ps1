@@ -1,14 +1,4 @@
 #Requires -Version 5.1
-<#
-.SYNOPSIS
-    在可联网电脑上打包三仓库代码、Docker 镜像与业务数据，供单位离线机部署。
-
-.PARAMETER IncludeData
-    是否包含业务数据（默认先执行 backup-data.bat，再打入 data-backup 目录）。
-
-.PARAMETER OutputDir
-    输出目录；默认 projects\backups\offline-deploy_yyyy-MM-dd_HHmmss
-#>
 param(
     [switch]$IncludeData = $true,
     [string]$OutputDir = ""
@@ -30,7 +20,7 @@ function Resolve-ProjectsDir {
         $marker = Join-Path $dir "instrument-training-home\app\main.py"
         if (Test-Path $marker) { return $dir }
     }
-    throw "未找到 projects 工作区（需包含 instrument-training-home 与 subi_knowledge_platform）。"
+    throw "Projects workspace not found."
 }
 
 function Copy-ProjectsSnapshot {
@@ -66,7 +56,7 @@ function Copy-ProjectsSnapshot {
 
     $null = & robocopy @robocopyArgs
     if ($LASTEXITCODE -ge 8) {
-        throw "复制代码快照失败，robocopy 退出码：$LASTEXITCODE"
+        throw "Robocopy failed with exit code $LASTEXITCODE"
     }
 }
 
@@ -81,53 +71,53 @@ $dataBackupDir = Join-Path $packageRoot "data-backup"
 $imageTar = Join-Path $packageRoot "docker-images.tar"
 
 Write-Host "========================================"
-Write-Host "  离线部署包导出"
+Write-Host "  Export Offline Deploy Package"
 Write-Host "========================================"
-Write-Host "工作区：$projectsDir"
-Write-Host "输出到：$packageRoot"
+Write-Host "Workspace: $projectsDir"
+Write-Host "Output:    $packageRoot"
 Write-Host ""
 
 docker info *> $null
 if ($LASTEXITCODE -ne 0) {
-    throw "Docker 未运行，请先启动 Docker Desktop 后再导出。"
+    throw "Docker is not running. Start Docker Desktop first."
 }
 
 Push-Location $projectsDir
 try {
-    Write-Host "[1/5] 构建 Docker 镜像（需联网拉取基础镜像与 pip 依赖）..."
+    Write-Host "[1/5] Building Docker images (requires network)..."
     docker compose build
     if ($LASTEXITCODE -ne 0) {
-        throw "docker compose build 失败。"
+        throw "docker compose build failed."
     }
 
     $images = @(docker compose config --images 2>$null | Where-Object { $_ -and $_.Trim() })
     if ($images.Count -eq 0) {
-        throw "未获取到 compose 镜像列表。"
+        throw "No compose images found."
     }
 
-    Write-Host "[2/5] 导出 Docker 镜像（共 $($images.Count) 个）..."
+    Write-Host "[2/5] Saving Docker images ($($images.Count))..."
     foreach ($img in $images) { Write-Host "       - $img" }
     docker save -o $imageTar @images
     if ($LASTEXITCODE -ne 0) {
-        throw "docker save 失败。"
+        throw "docker save failed."
     }
 
-    Write-Host "[3/5] 复制三仓库代码快照..."
+    Write-Host "[3/5] Copying code snapshot..."
     if (Test-Path $projectsSnapshot) {
         Remove-Item $projectsSnapshot -Recurse -Force
     }
     New-Item -ItemType Directory -Path $projectsSnapshot -Force | Out-Null
     Copy-ProjectsSnapshot -SourceRoot $projectsDir -DestinationRoot $projectsSnapshot
 
-    $envExample = Join-Path $projectsDir "subi_knowledge_platform\.env"
+    $envSource = Join-Path $projectsDir "subi_knowledge_platform\.env"
     $envTarget = Join-Path $projectsSnapshot "subi_knowledge_platform\.env"
-    if ((Test-Path $envExample) -and -not (Test-Path $envTarget)) {
-        Copy-Item $envExample $envTarget
-        Write-Host "       已附带 subi_knowledge_platform\.env"
+    if ((Test-Path $envSource) -and -not (Test-Path $envTarget)) {
+        Copy-Item $envSource $envTarget
+        Write-Host "       Included subi_knowledge_platform\.env"
     }
 
     if ($IncludeData) {
-        Write-Host "[4/5] 打包业务数据..."
+        Write-Host "[4/5] Packing business data..."
         if (Test-Path $dataBackupDir) {
             Remove-Item $dataBackupDir -Recurse -Force
         }
@@ -141,7 +131,7 @@ try {
 
         $dataCopied = $false
         if ($latestBackup) {
-            Write-Host "       优先使用最新备份：$($latestBackup.Name)"
+            Write-Host "       Using latest backup: $($latestBackup.Name)"
             $robocopyArgs = @(
                 $latestBackup.FullName,
                 $dataBackupDir,
@@ -149,13 +139,13 @@ try {
             )
             $null = & robocopy @robocopyArgs
             if ($LASTEXITCODE -ge 8) {
-                throw "复制业务数据失败，robocopy 退出码：$LASTEXITCODE"
+                throw "Robocopy data backup failed with exit code $LASTEXITCODE"
             }
             $dataCopied = $true
         }
 
         if (-not $dataCopied) {
-            Write-Host "       未找到常规备份，改为直接复制当前 data/uploads..."
+            Write-Host "       No backup folder found, copying live data/uploads..."
             $pairs = @(
                 @{
                     Source = Join-Path $projectsDir "instrument-training-home\data\instrument_training.db"
@@ -181,48 +171,39 @@ try {
             }
         }
     } else {
-        Write-Host "[4/5] 跳过业务数据（未指定 -IncludeData）。"
+        Write-Host "[4/5] Skipping business data."
     }
 
-    Write-Host "[5/5] 写入部署说明与一键脚本..."
+    Write-Host "[5/5] Writing deploy scripts..."
     Copy-Item (Join-Path $projectsDir "scripts\deploy-offline.ps1") (Join-Path $packageRoot "deploy-offline.ps1") -Force
     Copy-Item (Join-Path $projectsDir "deploy-offline.bat") (Join-Path $packageRoot "deploy-offline.bat") -Force
 
-    $readme = @"
-离线部署包生成时间：$stamp
-来源工作区：$projectsDir
-
-【单位离线电脑使用步骤】
-1. 安装 Docker Desktop（一次性，可提前下载离线安装包）
-2. 将整个文件夹复制到 U 盘，再拷到单位电脑（建议 C:\projects-offline-deploy 或 D:\）
-3. 双击 deploy-offline.bat（或 离线部署.bat）
-4. 按提示选择目标目录（默认 C:\projects 或 D:\projects）
-5. 浏览器访问：
-   - Sub-I 资料库：http://127.0.0.1:8510
-   - 培训管理：    http://127.0.0.1:8501
-   默认工号 3267，密码 123456
-
-【包内内容】
-- projects\          三仓库代码 + 编排脚本快照
-- docker-images.tar  已构建的 4 个容器镜像（无需联网 build）
-- data-backup\       业务数据库与附件（若导出时包含）
-- deploy-offline.bat 单位电脑一键部署入口
-
-【注意】
-- 导出本包时必须在可联网电脑先 docker compose build 成功
-- 单位电脑全程无需 git / 无需访问 GitHub
-- 若仅更新代码不含数据，导出时可去掉数据步骤（export-offline-package.bat 选 N）
-"@
-    Set-Content -Path (Join-Path $packageRoot "README-OFFLINE.txt") -Value $readme -Encoding UTF8
+    $readmeLines = @(
+        "Offline deploy package created: $stamp"
+        "Source workspace: $projectsDir"
+        ""
+        "On offline PC:"
+        "1. Install Docker Desktop"
+        "2. Copy this folder via USB"
+        "3. Run deploy-offline.bat"
+        "4. Open http://127.0.0.1:8510 (Sub-I) and http://127.0.0.1:8501 (training)"
+        "   Default login: employee_id 3267, password 123456"
+        ""
+        "Contents:"
+        "  projects\          code snapshot"
+        "  docker-images.tar  pre-built images"
+        "  data-backup\       databases and uploads (if included)"
+        "  deploy-offline.bat one-click deploy"
+    )
+    Set-Content -Path (Join-Path $packageRoot "README-OFFLINE.txt") -Value $readmeLines -Encoding ASCII
 
     $imageSizeMb = [math]::Round((Get-Item $imageTar).Length / 1MB, 1)
     Write-Host ""
     Write-Host "========================================"
-    Write-Host "导出完成"
-    Write-Host "目录：$packageRoot"
-    Write-Host "镜像：docker-images.tar (${imageSizeMb} MB)"
-    Write-Host ""
-    Write-Host "请将整个文件夹复制到 U 盘，在单位电脑运行 deploy-offline.bat"
+    Write-Host "Export complete"
+    Write-Host "Folder: $packageRoot"
+    Write-Host "Images: docker-images.tar ($imageSizeMb MB)"
+    Write-Host "Copy the whole folder to USB, then run deploy-offline.bat on offline PC."
     Write-Host "========================================"
 }
 finally {

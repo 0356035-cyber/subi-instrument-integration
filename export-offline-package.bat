@@ -1,30 +1,36 @@
 @echo off
-chcp 65001 >nul
-title 导出离线部署包
+setlocal EnableDelayedExpansion
+title Export Offline Deploy Package
 
 call "%~dp0scripts\resolve-projects-dir.bat"
 if not defined PROJECTS_DIR (
-    echo [ERROR] 未找到 projects 工作区。
+    if exist "%~dp0instrument-training-home\app\main.py" (
+        set "PROJECTS_DIR=%~dp0"
+        if "!PROJECTS_DIR:~-1!"=="\" set "PROJECTS_DIR=!PROJECTS_DIR:~0,-1!"
+    )
+)
+if not defined PROJECTS_DIR (
+    echo [ERROR] Projects workspace not found.
     pause
     exit /b 1
 )
 
 echo ========================================
-echo   导出离线部署包（家里/联网电脑执行）
+echo   Export Offline Deploy Package
 echo ========================================
-echo 工作目录: %PROJECTS_DIR%
+echo Workspace: %PROJECTS_DIR%
 echo.
-echo 将打包：
-echo   1. 三仓库代码快照
-echo   2. 已构建的 Docker 镜像（docker-images.tar）
-echo   3. 最新业务数据备份（可选）
-echo   4. 单位电脑一键部署脚本 deploy-offline.bat
+echo Package includes:
+echo   1. Code snapshot (3 repos)
+echo   2. Docker images (docker-images.tar)
+echo   3. Business data backup (optional)
+echo   4. deploy-offline.bat for offline PC
 echo.
-echo 前提：Docker Desktop 已启动，且本机可联网完成 docker compose build
+echo Requires: Docker Desktop running and network for docker compose build
 echo.
 
 set "INCLUDE_DATA=-IncludeData"
-set /p "SKIP_DATA=是否跳过业务数据，仅更新代码+镜像？(Y/N，默认 N): "
+set /p "SKIP_DATA=Skip business data, code+images only? (Y/N, default N): "
 if /i "%SKIP_DATA%"=="Y" set "INCLUDE_DATA="
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECTS_DIR%\scripts\export-offline-package.ps1" %INCLUDE_DATA%
@@ -32,9 +38,9 @@ set "EXIT_CODE=%errorlevel%"
 
 echo.
 if %EXIT_CODE% neq 0 (
-    echo [ERROR] 导出失败，代码：%EXIT_CODE%
+    echo [ERROR] Export failed, code: %EXIT_CODE%
 ) else (
-    echo [OK] 请将 backups\offline-deploy_* 整个文件夹复制到 U 盘。
+    echo [OK] Copy backups\offline-deploy_* folder to USB drive.
 )
 pause
 exit /b %EXIT_CODE%
