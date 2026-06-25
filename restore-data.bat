@@ -10,7 +10,14 @@ echo.
 
 call "%~dp0scripts\resolve-projects-dir.bat"
 if not defined PROJECTS_DIR (
+    if exist "%~dp0instrument-training-home\app\main.py" (
+        set "PROJECTS_DIR=%~dp0"
+        if "!PROJECTS_DIR:~-1!"=="\" set "PROJECTS_DIR=!PROJECTS_DIR:~0,-1!"
+    )
+)
+if not defined PROJECTS_DIR (
     echo [ERROR] Project folder not found.
+    echo         Expected instrument-training-home and subi_knowledge_platform under C:\projects or D:\projects
     pause
     exit /b 1
 )

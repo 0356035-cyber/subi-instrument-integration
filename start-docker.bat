@@ -4,6 +4,13 @@ title Sub-I 整合项目 Docker 启动
 
 call "%~dp0scripts\resolve-projects-dir.bat"
 if not defined PROJECTS_DIR (
+    if exist "%~dp0instrument-training-home\app\main.py" (
+        pushd "%~dp0"
+        set "PROJECTS_DIR=%CD%"
+        popd
+    )
+)
+if not defined PROJECTS_DIR (
     echo [ERROR] 未找到 projects 工作区（需包含 instrument-training-home 与 subi_knowledge_platform）。
     pause
     exit /b 1
