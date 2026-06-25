@@ -12,37 +12,81 @@ call "%SCRIPT_DIR%\scripts\resolve-projects-dir.bat" 2>nul
 if defined PROJECTS_DIR set "DEFAULT_WORKDIR=%PROJECTS_DIR%"
 if not exist "%DEFAULT_WORKDIR%" set "DEFAULT_WORKDIR=D:\projects"
 
+set "LAST_WORKDIR="
+if exist "%LAST_WORKDIR_FILE%" (
+    set /p "LAST_WORKDIR="<"%LAST_WORKDIR_FILE%"
+)
+
 set "GROK_WORKDIR="
-if not "%~1"=="" (
-    set "GROK_WORKDIR=%~1"
-)
+if not "%~1"=="" set "GROK_WORKDIR=%~1"
 
-if not defined GROK_WORKDIR (
-    if exist "%LAST_WORKDIR_FILE%" (
-        set /p "GROK_WORKDIR="<"%LAST_WORKDIR_FILE%"
+:pick_workspace
+if defined GROK_WORKDIR goto workspace_ready
+
+echo ========================================
+echo   Grok Build - Pick Workspace
+echo ========================================
+echo.
+echo   [1] Default projects folder
+echo       %DEFAULT_WORKDIR%
+if defined LAST_WORKDIR (
+    echo   [2] Last used folder
+    echo       !LAST_WORKDIR!
+) else (
+    echo   [2] Last used folder ^(none^)
+)
+echo   [3] Browse folder... ^(Windows picker^)
+echo   [4] Type path manually
+echo.
+set "CHOICE="
+set /p "CHOICE=Select 1-4, Enter=1: "
+if "%CHOICE%"=="" set "CHOICE=1"
+
+if "%CHOICE%"=="1" (
+    set "GROK_WORKDIR=%DEFAULT_WORKDIR%"
+    goto workspace_ready
+)
+if "%CHOICE%"=="2" (
+    if not defined LAST_WORKDIR (
+        echo.
+        echo [INFO] No last folder saved yet. Pick option 3 or 4.
+        echo.
+        goto pick_workspace
     )
+    set "GROK_WORKDIR=!LAST_WORKDIR!"
+    goto workspace_ready
+)
+if "%CHOICE%"=="3" (
+    set "PICK_START=%DEFAULT_WORKDIR%"
+    if defined LAST_WORKDIR set "PICK_START=!LAST_WORKDIR!"
+    for /f "usebackq delims=" %%W in (`powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\pick-grok-workdir.ps1" -InitialPath "!PICK_START!" 2^>nul`) do set "GROK_WORKDIR=%%W"
+    if not defined GROK_WORKDIR (
+        echo.
+        echo [INFO] Folder picker cancelled.
+        echo.
+        goto pick_workspace
+    )
+    goto workspace_ready
+)
+if "%CHOICE%"=="4" (
+    set /p "GROK_WORKDIR=Workspace path: "
+    if not defined GROK_WORKDIR goto pick_workspace
+    goto workspace_ready
 )
 
-echo ========================================
-echo   Grok Build - Custom Workspace
-echo ========================================
 echo.
-echo Default: %DEFAULT_WORKDIR%
-if defined GROK_WORKDIR echo Last:    !GROK_WORKDIR!
+echo [INFO] Invalid choice. Try again.
 echo.
-echo Tip: drag a folder onto this bat file, or pass path as argument.
-echo.
+goto pick_workspace
 
-if not defined GROK_WORKDIR (
-    set /p "GROK_WORKDIR=Workspace path (Enter=default): "
-)
-if not defined GROK_WORKDIR set "GROK_WORKDIR=%DEFAULT_WORKDIR%"
+:workspace_ready
 if "!GROK_WORKDIR:~-1!"=="\" set "GROK_WORKDIR=!GROK_WORKDIR:~0,-1!"
 
 if not exist "!GROK_WORKDIR!" (
     echo [ERROR] Folder not found: !GROK_WORKDIR!
+    set "GROK_WORKDIR="
     pause
-    exit /b 1
+    goto pick_workspace
 )
 
 if not exist "%USERPROFILE%\.grok" mkdir "%USERPROFILE%\.grok" 2>nul
