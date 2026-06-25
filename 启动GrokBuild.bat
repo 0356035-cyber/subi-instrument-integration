@@ -25,7 +25,9 @@ set "NO_PROXY=localhost,127.0.0.1,::1,*.local"
 
 if exist "%SCRIPT_DIR%grok-proxy.env" (
     echo [INFO] 加载本地代理配置：grok-proxy.env
-    call "%SCRIPT_DIR%grok-proxy.env"
+    copy /y "%SCRIPT_DIR%grok-proxy.env" "%TEMP%\grok-proxy-load.bat" >nul
+    call "%TEMP%\grok-proxy-load.bat"
+    del "%TEMP%\grok-proxy-load.bat"
 ) else (
     echo [INFO] 未找到 grok-proxy.env，使用默认代理 %PROXY_SCHEME%://%PROXY_HOST%:%PROXY_PORT%
     echo       可复制 grok-proxy.env.example 为 grok-proxy.env 后修改。
