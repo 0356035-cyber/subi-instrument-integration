@@ -31,6 +31,8 @@ C:\projects\
 
 其他脚本（定时备份安装、Grok Build 等）偶尔才用，见下方说明。
 
+| **Grok 其他项目** | `启动GrokBuild-自定义目录.bat` | 自选工作目录启动 Grok Build（会记住上次路径） |
+
 ## 快速启动（家里 / 单位相同）
 
 ```bat
