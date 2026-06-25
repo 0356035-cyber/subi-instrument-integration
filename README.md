@@ -56,6 +56,7 @@ git clone https://github.com/0356035-cyber/instrument-training-home.git
 
 - **代码**：三个仓库分别 `git pull`
 - **业务数据**：`备份数据.bat` → 拷贝 `backups\` 文件夹 → 新电脑 `恢复数据.bat`
+- **定时备份**：运行 `安装定时备份.bat` 注册每日 02:00 自动备份（保留 14 份）
 
 详见 [`项目整合交接文档.md`](./项目整合交接文档.md) §7.5。
 
