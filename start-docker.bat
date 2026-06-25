@@ -25,6 +25,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [INFO] 正在构建并启动容器（代码更新后请执行本脚本以同步依赖）...
+echo [TIP] 首次构建可能需要数分钟，请勿提前关闭本窗口。
 docker compose up -d --build
 if %errorlevel% neq 0 (
     echo [ERROR] Docker 启动失败。
@@ -34,7 +35,24 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [INFO] 等待服务就绪...
-timeout /t 5 /nobreak >nul
+timeout /t 8 /nobreak >nul
+
+echo.
+echo --- 容器状态 ---
+docker compose ps
+for /f %%i in ('docker compose ps --status exited -q 2^>nul') do (
+    echo [WARN] 有容器已退出，正在尝试重新拉起...
+    docker compose up -d
+    timeout /t 5 /nobreak >nul
+    goto :check_again
+)
+:check_again
+docker compose ps --status running --format "{{.Name}}" | findstr /r "." >nul
+if %errorlevel% neq 0 (
+    echo [ERROR] 没有运行中的容器。请确认 Docker Desktop 左下角显示 Engine running 后重试。
+    pause
+    exit /b 1
+)
 
 echo.
 echo --- 健康检查 ---
