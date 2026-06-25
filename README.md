@@ -70,7 +70,19 @@ git clone https://github.com/0356035-cyber/instrument-training-home.git
 - **业务数据**：`备份数据.bat` → 拷贝 `backups\` 文件夹 → 新电脑 `恢复数据.bat`
 - **定时备份**：运行 `install-scheduled-backup.bat`（或 `安装定时备份.bat`）注册每日 02:00 自动备份（保留 14 份）
 
-详见 [`项目整合交接文档.md`](./项目整合交接文档.md) §7.5。
+### 单位离线电脑（不联网）一键部署
+
+家里联网电脑先打离线包，U 盘拷到单位后一键部署，**无需 git / GitHub**：
+
+| 步骤 | 在哪里 | 脚本 |
+|------|--------|------|
+| 1. 打包 | 家里（Docker 已启动、可联网 build） | `导出离线部署包.bat` |
+| 2. 拷贝 | U 盘 | 整个 `backups\offline-deploy_*` 文件夹 |
+| 3. 部署 | 单位（已装 Docker Desktop） | 包内 `离线部署.bat` |
+
+输出目录示例：`backups\offline-deploy_2026-06-24_120000\`（含代码、镜像 tar、数据、部署脚本）
+
+详见 [`项目整合交接文档.md`](./项目整合交接文档.md) §7.5、§7.6。
 
 ## 本地 Python 开发（可选）
 
