@@ -33,7 +33,7 @@ set "INCLUDE_DATA=-IncludeData"
 set /p "SKIP_DATA=Skip business data, code+images only? (Y/N, default N): "
 if /i "%SKIP_DATA%"=="Y" set "INCLUDE_DATA="
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECTS_DIR%\scripts\export-offline-package.ps1" %INCLUDE_DATA%
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECTS_DIR%\scripts\export-offline-package.ps1" -ProjectsDir "%PROJECTS_DIR%" %INCLUDE_DATA%
 set "EXIT_CODE=%errorlevel%"
 
 echo.

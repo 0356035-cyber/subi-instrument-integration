@@ -37,7 +37,10 @@ function Copy-Tree {
 }
 
 if ([string]::IsNullOrWhiteSpace($PackageDir)) {
-    $PackageDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+        throw "Cannot resolve package directory. Run deploy-offline.bat from the package folder."
+    }
+    $PackageDir = $PSScriptRoot
 }
 $PackageDir = [System.IO.Path]::GetFullPath($PackageDir)
 

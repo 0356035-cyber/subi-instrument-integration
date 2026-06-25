@@ -1,16 +1,18 @@
 #Requires -Version 5.1
 param(
     [switch]$IncludeData = $true,
-    [string]$OutputDir = ""
+    [string]$OutputDir = "",
+    [string]$ProjectsDir = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Resolve-ProjectsDir {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    param([string]$ScriptRoot)
+    $parentDir = Split-Path -Parent $ScriptRoot
     $candidates = @(
-        (Resolve-Path (Join-Path $scriptDir "..") -ErrorAction SilentlyContinue).Path,
+        $parentDir,
         "D:\projects",
         "C:\projects"
     ) | Select-Object -Unique
@@ -60,7 +62,18 @@ function Copy-ProjectsSnapshot {
     }
 }
 
-$projectsDir = Resolve-ProjectsDir
+if ([string]::IsNullOrWhiteSpace($ProjectsDir)) {
+    $scriptRoot = $PSScriptRoot
+    if ([string]::IsNullOrWhiteSpace($scriptRoot)) {
+        throw "Cannot resolve script directory. Run via export-offline-package.bat."
+    }
+    $ProjectsDir = Resolve-ProjectsDir -ScriptRoot $scriptRoot
+}
+$projectsDir = [System.IO.Path]::GetFullPath($ProjectsDir)
+$marker = Join-Path $projectsDir "instrument-training-home\app\main.py"
+if (-not (Test-Path $marker)) {
+    throw "Invalid projects workspace: $projectsDir"
+}
 $stamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $projectsDir "backups\offline-deploy_$stamp"
