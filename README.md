@@ -21,11 +21,23 @@ C:\projects\
 └── subi_knowledge_platform\    # 独立 Git 仓库
 ```
 
+## 日常只需记住 3 个脚本
+
+| 什么时候 | 双击这个 | 说明 |
+|----------|----------|------|
+| **每天开机启动系统** | `启动系统.bat` | 等同 `start-docker.bat`，启动全部 4 个容器 |
+| **关机前备份数据** | `备份数据.bat` | 拷贝数据库和附件到 `backups\` |
+| **换电脑恢复数据** | `恢复数据.bat` | 从备份文件夹还原 |
+
+其他脚本（定时备份安装、Grok Build 等）偶尔才用，见下方说明。
+
 ## 快速启动（家里 / 单位相同）
 
 ```bat
-start-docker.bat
+启动系统.bat
 ```
+
+或英文入口：`start-docker.bat`
 
 启动后 Docker Desktop 显示 **`projects`** 项目，包含 4 个容器：
 
