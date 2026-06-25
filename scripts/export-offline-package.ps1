@@ -83,6 +83,12 @@ $projectsSnapshot = Join-Path $packageRoot "projects"
 $dataBackupDir = Join-Path $packageRoot "data-backup"
 $imageTar = Join-Path $packageRoot "docker-images.tar"
 
+$backupParent = Split-Path -Parent $packageRoot
+if (-not (Test-Path $backupParent)) {
+    New-Item -ItemType Directory -Path $backupParent -Force | Out-Null
+}
+New-Item -ItemType Directory -Path $packageRoot -Force | Out-Null
+
 Write-Host "========================================"
 Write-Host "  Export Offline Deploy Package"
 Write-Host "========================================"
