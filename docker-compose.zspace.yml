@@ -1,0 +1,11 @@
+# ZSpace / older docker compose compatible overlay
+# Usage: docker compose -f docker-compose.yml -f docker-compose.zspace.yml up -d --no-build
+
+services:
+  subi-backend:
+    env_file:
+      - ./subi_knowledge_platform/.env
+
+  subi-frontend:
+    depends_on:
+      - subi-backend
