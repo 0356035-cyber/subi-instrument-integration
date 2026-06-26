@@ -43,8 +43,7 @@ services:
       - ./subi_knowledge_platform/data:/app/data
       - ./subi_knowledge_platform/uploads:/app/uploads
     env_file:
-      - path: ./subi_knowledge_platform/.env
-        required: false
+      - ./subi_knowledge_platform/.env
     environment:
       - PYTHONUNBUFFERED=1
       # Docker 内网地址，覆盖 .env 中的 localhost
