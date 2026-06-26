@@ -86,6 +86,19 @@ git clone https://github.com/0356035-cyber/instrument-training-home.git
 
 详见 [`项目整合交接文档.md`](./项目整合交接文档.md) §7.5、§7.6。
 
+## 极空间 NAS + Cloudflare 外网访问（无公网 IP）
+
+适合 **极空间 Docker** 部署，通过 **Cloudflare Tunnel** 暴露 HTTPS，无需路由器端口映射。
+
+| 步骤 | 脚本/文件 |
+|------|-----------|
+| 完整实施清单 | [`极空间部署说明.md`](./极空间部署说明.md) |
+| Tunnel 叠加配置 | `docker-compose.tunnel.yml` |
+| Token 模板 | 复制 `.env.tunnel.example` → `.env.tunnel` |
+| 启动业务 + Tunnel | `启动Tunnel.bat` |
+
+外网子域名示例：`train.你的域名.com`（8501）、`subi.你的域名.com`（8510）。
+
 ## 本地 Python 开发（可选）
 
 ```bat

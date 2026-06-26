@@ -7,6 +7,7 @@ venv/
 # Secrets
 .env
 **/.env
+.env.tunnel
 grok-proxy.env
 
 # Runtime & local tooling
