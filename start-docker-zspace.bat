@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 >nul
-title 启动系统 + Cloudflare Tunnel
+title Docker 启动（极空间兼容 Compose）
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-docker.ps1" -Mode tunnel
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-docker.ps1" -Mode zspace
 set "EXIT_CODE=%errorlevel%"
 
 if %EXIT_CODE% neq 0 (

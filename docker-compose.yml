@@ -67,7 +67,8 @@ services:
       - PYTHONUNBUFFERED=1
       - API_BASE=http://subi-backend:8001
     depends_on:
-      - subi-backend
+      subi-backend:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8510/_stcore/health', timeout=5)"]
       interval: 30s
