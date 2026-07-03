@@ -107,6 +107,7 @@ subi_knowledge_platform\启动资料库系统.bat
 
 ## 交接文档
 
-- **系统总览**：[`系统总览.md`](./系统总览.md)
+- **系统总览（1.0 现状）**：[`系统总览.md`](./系统总览.md)
+- **Clinical Research OS 2.0 蓝图**：[`ARCHITECTURE.md`](./ARCHITECTURE.md) · [`DATA_MODEL.md`](./DATA_MODEL.md) · [`DEVELOPMENT_ROADMAP.md`](./DEVELOPMENT_ROADMAP.md) · [`CODEX_WORKFLOW.md`](./CODEX_WORKFLOW.md)
 - 整合说明：[`项目整合交接文档.md`](./项目整合交接文档.md)
 - Sub-I 功能细节：[`subi_knowledge_platform/项目交接总结.md`](./subi_knowledge_platform/项目交接总结.md)
