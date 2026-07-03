@@ -220,7 +220,8 @@ Project 详情下的 **AI Workspace** 页面（非独立系统）：
 | 文档 | 内容 |
 |------|------|
 | [DATA_MODEL.md](./DATA_MODEL.md) | 六大核心对象字段 |
-| [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md) | 阶段 0～6 路线图 |
+| [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md) | 阶段 1～8 路线图（当前推进阶段 3） |
+| [CODE_MAP.md](./CODE_MAP.md) | 文件/API/表/页面代码地图 |
 | [CODEX_WORKFLOW.md](./CODEX_WORKFLOW.md) | 开发与 Codex 协作约定 |
 | [系统总览.md](./系统总览.md) | 当前已上线系统一页总览 |
 | [项目整合交接文档.md](./项目整合交接文档.md) | 历史规划 §14、权限 §14.12 |

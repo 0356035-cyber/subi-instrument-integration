@@ -9,15 +9,16 @@
 ## 1. 开发前必读（按顺序）
 
 1. [系统总览.md](./系统总览.md) — **当前已上线什么**
-2. [ARCHITECTURE.md](./ARCHITECTURE.md) — **2.0 方向与边界**
-3. [DATA_MODEL.md](./DATA_MODEL.md) — **目标数据模型**
-4. [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md) — **当前应做哪一阶段**
-5. [项目整合交接文档.md](./项目整合交接文档.md) — 整合细节、权限 §14.12
+2. [CODE_MAP.md](./CODE_MAP.md) — **改哪、不该改哪（文件/API/表索引）**
+3. [ARCHITECTURE.md](./ARCHITECTURE.md) — **2.0 方向与边界**
+4. [DATA_MODEL.md](./DATA_MODEL.md) — **目标数据模型**
+5. [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md) — **当前应做哪一阶段**
+6. [项目整合交接文档.md](./项目整合交接文档.md) — 整合细节、权限 §14.12
 
 **新对话粘贴模板：**
 
 ```text
-请阅读 projects/系统总览.md、ARCHITECTURE.md、DEVELOPMENT_ROADMAP.md，
+请阅读 projects/CODE_MAP.md、DEVELOPMENT_ROADMAP.md、ARCHITECTURE.md，
 在不动四容器与 instrument-training-home 独立边界的前提下，
 推进 Clinical Research OS 2.0 阶段 N：<具体任务>。
 默认渐进修改，禁止整体重写。
