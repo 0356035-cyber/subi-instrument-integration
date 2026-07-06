@@ -77,8 +77,14 @@ echo Restore from: !SELECTED!
 echo Source: %SRC%
 echo.
 echo [WARNING] This will overwrite current databases and uploads.
-set /p "CONFIRM=Type Y to confirm: "
-if /i not "%CONFIRM%"=="Y" exit /b 0
+echo You must type the backup folder name to confirm:
+echo   !SELECTED!
+set /p "CONFIRM_NAME=Folder name: "
+if /i not "!CONFIRM_NAME!"=="!SELECTED!" (
+    echo [CANCELLED] Folder name did not match.
+    pause
+    exit /b 0
+)
 echo.
 
 set "WARN_RUNNING=0"
@@ -97,12 +103,13 @@ if "%WARN_RUNNING%"=="1" (
 
 for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-dd_HHmmss'"`) do set "STAMP=%%T"
 set "SAFETY_DIR=%BACKUP_ROOT%\pre_restore_%STAMP%"
+set "PY_SAFETY=%PROJECTS_DIR%\scripts\data_safety.py"
 
 echo [INFO] Saving current data to:
 echo        %SAFETY_DIR%
 mkdir "%SAFETY_DIR%" 2>nul
-if exist "%TRAIN_DB%" copy /Y "%TRAIN_DB%" "%SAFETY_DIR%\instrument_training.db" >nul
-if exist "%SUBI_DB%" copy /Y "%SUBI_DB%" "%SAFETY_DIR%\subi_knowledge.db" >nul
+if exist "%TRAIN_DB%" python "%PY_SAFETY%" backup "%TRAIN_DB%" "%SAFETY_DIR%\instrument_training.db" >nul
+if exist "%SUBI_DB%" python "%PY_SAFETY%" backup "%SUBI_DB%" "%SAFETY_DIR%\subi_knowledge.db" >nul
 if exist "%SUBI_UPLOADS%" robocopy "%SUBI_UPLOADS%" "%SAFETY_DIR%\uploads" /E /NFL /NDL /NJH /NJS /nc /ns /np >nul
 echo [OK] Safety backup saved
 echo.

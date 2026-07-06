@@ -5,6 +5,8 @@ services:
   subi-backend:
     env_file:
       - ./subi_knowledge_platform/.env
+    environment:
+      - SUBI_DATA_PROFILE=production
 
   subi-frontend:
     depends_on:

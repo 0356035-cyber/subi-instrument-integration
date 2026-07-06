@@ -30,6 +30,7 @@ set "BACKUP_ROOT=%PROJECTS_DIR%\backups"
 
 for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-dd_HHmmss'"`) do set "STAMP=%%T"
 set "BACKUP_DIR=%BACKUP_ROOT%\%STAMP%"
+set "PY_SAFETY=%PROJECTS_DIR%\scripts\data_safety.py"
 
 echo Backup to: %BACKUP_DIR%
 echo.
@@ -66,14 +67,28 @@ if not exist "%BACKUP_DIR%" (
     exit /b 1
 )
 
-echo [INFO] Copying...
+echo [INFO] Backing up (SQLite online backup + verify)...
 echo.
 set "COPIED=0"
 
-if exist "%TRAIN_DB%" (
-    copy /Y "%TRAIN_DB%" "%BACKUP_DIR%\instrument_training.db" >nul
+set "DOCKER_TRAIN="
+for /f "delims=" %%N in ('docker ps --filter "name=instrument_train_backend" --format "{{.Names}}" 2^>nul') do set "DOCKER_TRAIN=%%N"
+set "DOCKER_SUBI="
+for /f "delims=" %%N in ('docker ps --filter "name=subi_backend" --format "{{.Names}}" 2^>nul') do set "DOCKER_SUBI=%%N"
+
+if defined DOCKER_TRAIN (
+    docker exec instrument_train_backend python -c "import sqlite3;s=sqlite3.connect('/app/data/instrument_training.db');d=sqlite3.connect('/tmp/backup.db');s.backup(d);d.close();s.close()" >nul
+    docker cp instrument_train_backend:/tmp/backup.db "%BACKUP_DIR%\instrument_training.db" >nul
+    python "%PY_SAFETY%" verify "%BACKUP_DIR%\instrument_training.db" >nul
     if !errorlevel!==0 (
-        echo [OK] instrument_training.db
+        echo [OK] instrument_training.db ^(docker online backup^)
+        set "COPIED=1"
+    ) else (
+        echo [FAIL] instrument_training.db
+    )
+) else if exist "%TRAIN_DB%" (
+    python "%PY_SAFETY%" backup "%TRAIN_DB%" "%BACKUP_DIR%\instrument_training.db"
+    if !errorlevel!==0 (
         set "COPIED=1"
     ) else (
         echo [FAIL] instrument_training.db
@@ -82,10 +97,19 @@ if exist "%TRAIN_DB%" (
     echo [SKIP] instrument_training.db
 )
 
-if exist "%SUBI_DB%" (
-    copy /Y "%SUBI_DB%" "%BACKUP_DIR%\subi_knowledge.db" >nul
+if defined DOCKER_SUBI (
+    docker exec subi_backend python -c "import sqlite3;s=sqlite3.connect('/app/data/subi_knowledge.db');d=sqlite3.connect('/tmp/subi_backup.db');s.backup(d);d.close();s.close()" >nul
+    docker cp subi_backend:/tmp/subi_backup.db "%BACKUP_DIR%\subi_knowledge.db" >nul
+    python "%PY_SAFETY%" verify "%BACKUP_DIR%\subi_knowledge.db" >nul
     if !errorlevel!==0 (
-        echo [OK] subi_knowledge.db
+        echo [OK] subi_knowledge.db ^(docker online backup^)
+        set "COPIED=1"
+    ) else (
+        echo [FAIL] subi_knowledge.db
+    )
+) else if exist "%SUBI_DB%" (
+    python "%PY_SAFETY%" backup "%SUBI_DB%" "%BACKUP_DIR%\subi_knowledge.db"
+    if !errorlevel!==0 (
         set "COPIED=1"
     ) else (
         echo [FAIL] subi_knowledge.db
