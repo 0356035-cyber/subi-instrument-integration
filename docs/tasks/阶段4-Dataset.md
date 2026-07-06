@@ -63,5 +63,8 @@
 ```bat
 cd subi_knowledge_platform
 set PYTHONPATH=.
+set PERM_TEST_PASSWORD=你的当前密码
 .venv\Scripts\python.exe backend\scripts\dataset_smoke_test.py
 ```
+
+冒烟脚本**不会**自动重置密码。
