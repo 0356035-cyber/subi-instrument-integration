@@ -5,7 +5,7 @@
 > **更新义务：** 完成阶段性任务或发现新问题时同步更新。  
 > **关联：** 路线图细节见 [docs/tasks/](./docs/tasks/)；架构见 [docs/系统总览.md](./docs/系统总览.md)。
 
-**更新日期：** 2026-07-06（阶段 4 Dataset 已完成）
+**更新日期：** 2026-07-06（阶段 5 Analysis 已完成）
 
 ---
 
@@ -18,8 +18,8 @@
 | 3 | Project 多 Tab | ✅ 已完成 |
 | 3+ | §14.12 分层权限 MVP | ✅ 已完成 |
 | 4 | Dataset 数据集 | ✅ 已完成 |
-| 5 | Analysis 统计分析 | ⏳ **下一开发重点** |
-| 6 | Report 报告生成 | 未开始 |
+| 5 | Analysis 统计分析 | ✅ 已完成 |
+| 6 | Report 报告生成 | ⏳ **下一开发重点** |
 | 7 | AI Workspace | 未开始 |
 | 8 | 半自动 AI（远期） | 未开始 |
 
@@ -33,12 +33,13 @@
 
 ### Sub-I 资料库
 - 资料版本组 `document_group_id`、对比、独立详情页
-- 项目管理一期 + 8 Tab 详情页（4 个实装 + 4 个占位）
+- 项目管理一期 + 8 Tab 详情页（5 个实装 + 3 个占位）
 - `document_type` 字段与项目资料 Tab 筛选
 - 排班日历阶段 0～2：访视节点、周排班、冲突预警、资质联动
 - 资质查询 BFF + 按工号/仪器/批量核验
 - **§14.12 权限 MVP：** `permissions.py`、`ProjectMember`、`AuditLog`、`ProjectLeadNotification`、`audience_scope`
 - **阶段 4 Dataset：** Excel 上传、sheet 预览、列映射、草稿/已确认
+- **阶段 5 Analysis：** 配对比较 / 改变率 / 有效率，执行留痕 `log_json`
 - 培训人员同步：`POST /users/sync-from-training`（默认仅新增）
 - 侧边栏改密 + 改密后自动登出
 
@@ -59,16 +60,16 @@
 
 | 项 | 说明 |
 |----|------|
-| **阶段 5 Analysis（P1）** | 下一开发重点 |
-| 界面人工抽检 | 可在项目详情「数据集」Tab 上传 Excel 并确认映射 |
+| **阶段 6 Report（P1）** | 下一开发重点 |
+| 界面人工抽检 | 可在项目详情「分析」Tab 创建并执行分析任务 |
 | 文档与代码对齐 | 持续维护 |
 
 ---
 
 ## 当前主要问题
 
-1. **阶段 5 未启动：** Analysis 规则引擎尚无实现。
-2. **样例数据在库中：** 权限验证项目/资料 + `[Dataset冒烟]` 测试数据集，可按需清理。
+1. **阶段 6 未启动：** Report 报告生成尚无实现。
+2. **样例数据在库中：** 权限验证项目/资料 + `[Dataset冒烟]` / `[Analysis冒烟]` 测试数据，可按需清理。
 
 ---
 
@@ -78,7 +79,8 @@
 |--------|------|----------|
 | ~~P0~~ | ~~权限运营验证~~ | ✅ [docs/tasks/权限运营验证.md](./docs/tasks/权限运营验证.md) |
 | ~~P1~~ | ~~阶段 4 Dataset~~ | ✅ [docs/tasks/阶段4-Dataset.md](./docs/tasks/阶段4-Dataset.md) |
-| **P1** | 阶段 5 Analysis：2～3 种标准统计 + 留痕 | [docs/modules/统计分析.md](./docs/modules/统计分析.md) |
+| ~~P1~~ | ~~阶段 5 Analysis~~ | ✅ [docs/tasks/阶段5-Analysis.md](./docs/tasks/阶段5-Analysis.md) |
+| **P1** | 阶段 6 Report：模板 + docx 生成 | [docs/modules/报告生成.md](./docs/modules/报告生成.md) |
 | P2 | 排班日历细节修复（按使用反馈） | [docs/modules/排班与项目日历.md](./docs/modules/排班与项目日历.md) |
 
 ---
@@ -99,3 +101,4 @@
 | 权限分层 MVP | [docs/tasks/权限分层-MVP.md](./docs/tasks/权限分层-MVP.md) |
 | 权限运营验证（P0） | [docs/tasks/权限运营验证.md](./docs/tasks/权限运营验证.md) |
 | 阶段 4 Dataset | [docs/tasks/阶段4-Dataset.md](./docs/tasks/阶段4-Dataset.md) |
+| 阶段 5 Analysis | [docs/tasks/阶段5-Analysis.md](./docs/tasks/阶段5-Analysis.md) |

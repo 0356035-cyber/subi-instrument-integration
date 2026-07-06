@@ -27,3 +27,4 @@
 | 权限分层 MVP | ✅ 完成 | [权限分层-MVP.md](./权限分层-MVP.md) |
 | 权限运营验证（P0） | ✅ 完成 | [权限运营验证.md](./权限运营验证.md) |
 | 阶段 4 Dataset | ✅ 完成 | [阶段4-Dataset.md](./阶段4-Dataset.md) |
+| 阶段 5 Analysis | ✅ 完成 | [阶段5-Analysis.md](./阶段5-Analysis.md) |
