@@ -5,7 +5,20 @@
 > **更新义务：** 完成阶段性任务或发现新问题时同步更新。  
 > **关联：** 路线图细节见 [docs/tasks/](./docs/tasks/)；架构见 [docs/系统总览.md](./docs/系统总览.md)。
 
-**更新日期：** 2026-07-06（阶段 5 Analysis 已完成）
+**更新日期：** 2026-07-07（暂停新功能开发，优先框架整理与文档一致性）
+
+---
+
+## 当前工作模式
+
+当前暂停新功能开发，优先进行：
+
+- 框架整理
+- 文档一致性同步
+- 安全边界加固
+- Codex 接管流程完善
+
+Report 仍是下一功能阶段，但本轮不开发 Report、不启动 AI Workspace、不新增业务能力。
 
 ---
 
@@ -19,7 +32,7 @@
 | 3+ | §14.12 分层权限 MVP | ✅ 已完成 |
 | 4 | Dataset 数据集 | ✅ 已完成 |
 | 5 | Analysis 统计分析 | ✅ 已完成 |
-| 6 | Report 报告生成 | ⏳ **下一开发重点** |
+| 6 | Report 报告生成 | ⏸ 下一功能阶段，当前暂停开发 |
 | 7 | AI Workspace | 未开始 |
 | 8 | 半自动 AI（远期） | 未开始 |
 
@@ -60,7 +73,8 @@
 
 | 项 | 说明 |
 |----|------|
-| **阶段 6 Report（P1）** | 下一开发重点 |
+| 框架整理与文档一致性 | 当前优先 |
+| **阶段 6 Report（P1）** | 下一功能阶段，当前暂停开发 |
 | 界面人工抽检 | 可在项目详情「分析」Tab 创建并执行分析任务 |
 | 文档与代码对齐 | 持续维护 |
 
@@ -80,7 +94,8 @@
 | ~~P0~~ | ~~权限运营验证~~ | ✅ [docs/tasks/权限运营验证.md](./docs/tasks/权限运营验证.md) |
 | ~~P1~~ | ~~阶段 4 Dataset~~ | ✅ [docs/tasks/阶段4-Dataset.md](./docs/tasks/阶段4-Dataset.md) |
 | ~~P1~~ | ~~阶段 5 Analysis~~ | ✅ [docs/tasks/阶段5-Analysis.md](./docs/tasks/阶段5-Analysis.md) |
-| **P1** | 阶段 6 Report：模板 + docx 生成 | [docs/modules/报告生成.md](./docs/modules/报告生成.md) |
+| **当前** | 框架整理、文档一致性、安全边界加固 | [docs/tasks/README.md](./docs/tasks/README.md) |
+| P1 | 阶段 6 Report：模板 + docx 生成（下一功能阶段，当前暂停开发） | [docs/modules/报告生成.md](./docs/modules/报告生成.md) |
 | P2 | 排班日历细节修复（按使用反馈） | [docs/modules/排班与项目日历.md](./docs/modules/排班与项目日历.md) |
 
 ---
@@ -102,3 +117,5 @@
 | 权限运营验证（P0） | [docs/tasks/权限运营验证.md](./docs/tasks/权限运营验证.md) |
 | 阶段 4 Dataset | [docs/tasks/阶段4-Dataset.md](./docs/tasks/阶段4-Dataset.md) |
 | 阶段 5 Analysis | [docs/tasks/阶段5-Analysis.md](./docs/tasks/阶段5-Analysis.md) |
+| 框架整理与加固：第一轮 | [docs/tasks/框架整理与加固-第一轮.md](./docs/tasks/框架整理与加固-第一轮.md) |
+| 框架整理与加固：第二轮 | [docs/tasks/框架整理与加固-第二轮.md](./docs/tasks/框架整理与加固-第二轮.md) |
