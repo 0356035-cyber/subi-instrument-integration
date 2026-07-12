@@ -180,6 +180,13 @@ body {
   line-height: 1;
 }
 
+.subject-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .row-edit-btn:hover {
   background: #e6f4ff;
 }

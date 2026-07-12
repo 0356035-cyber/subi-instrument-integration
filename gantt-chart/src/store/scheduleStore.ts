@@ -44,6 +44,7 @@ type ScheduleState = {
     subjectId: string,
     patch: Partial<Pick<Subject, 'name' | 'arrivalMin' | 'status'>>
   ) => void;
+  deleteSubject: (subjectId: string) => void;
   openProjectWorkflowEditor: (projectId?: string) => void;
   closeProjectWorkflowEditor: () => void;
   saveProjectWorkflow: (
@@ -184,6 +185,43 @@ export const useScheduleStore = create<ScheduleState>()((set, get) => ({
     set({
       subjects: updatedSubjects,
       tasks: updatedTasks,
+      ...validation,
+    });
+  },
+
+  deleteSubject: (subjectId) => {
+    const {
+      subjects,
+      tasks,
+      resources,
+      selectedTaskId,
+      editingSubjectId,
+      highlightedTaskIds,
+    } = get();
+    if (!subjects.some((s) => s.id === subjectId)) return;
+
+    const removedTaskIds = new Set(
+      tasks.filter((t) => t.subjectId === subjectId).map((t) => t.id)
+    );
+    const updatedSubjects = subjects.filter((s) => s.id !== subjectId);
+    const updatedTasks = tasks.filter((t) => t.subjectId !== subjectId);
+    const validation = revalidate(updatedTasks, resources);
+
+    const nextHighlighted = new Set(highlightedTaskIds);
+    for (const taskId of removedTaskIds) {
+      nextHighlighted.delete(taskId);
+    }
+
+    set({
+      subjects: updatedSubjects,
+      tasks: updatedTasks,
+      selectedTaskId:
+        selectedTaskId && removedTaskIds.has(selectedTaskId)
+          ? null
+          : selectedTaskId,
+      editingSubjectId:
+        editingSubjectId === subjectId ? null : editingSubjectId,
+      highlightedTaskIds: nextHighlighted,
       ...validation,
     });
   },

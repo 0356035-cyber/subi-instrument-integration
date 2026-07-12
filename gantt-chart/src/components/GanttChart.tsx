@@ -71,7 +71,7 @@ function SubjectRowHandle({
       ref={setNodeRef}
       className={`gantt-row-label gantt-sticky-label ${canDragRow ? 'row-draggable' : ''} ${isDragging ? 'row-dragging' : ''}`}
       style={{ width: labelWidth, height: rowHeight, ...style }}
-      title="拖动图标整体移动；铅笔编辑受试者信息"
+      title="拖动图标整体移动；铅笔可编辑或删除受试者"
     >
       {canDragRow && (
         <span className="row-drag-handle" {...listeners} {...attributes}>

@@ -1,4 +1,5 @@
-import { Form, Input, Modal, Select, TimePicker } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import type { SubjectStatus } from '../types';
@@ -19,6 +20,7 @@ export function SubjectInfoModal() {
     closeSubjectEditor,
     subjects,
     updateSubject,
+    deleteSubject,
   } = useScheduleStore();
   const [form] = Form.useForm();
   const subject = subjects.find((s) => s.id === editingSubjectId);
@@ -46,15 +48,40 @@ export function SubjectInfoModal() {
     closeSubjectEditor();
   };
 
+  const handleDelete = () => {
+    if (!subject) return;
+    deleteSubject(subject.id);
+    closeSubjectEditor();
+  };
+
   return (
     <Modal
       title={subject ? `受试者信息 · ${subject.id}` : ''}
       open={!!editingSubjectId}
-      onOk={handleOk}
       onCancel={closeSubjectEditor}
-      okText="保存"
-      cancelText="取消"
       destroyOnClose
+      footer={
+        <div className="subject-modal-footer">
+          <Popconfirm
+            title="确定删除该受试者？"
+            description="将一并删除其全部排程任务，且不可恢复。"
+            onConfirm={handleDelete}
+            okText="删除"
+            cancelText="取消"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger icon={<DeleteOutlined />}>
+              删除受试者
+            </Button>
+          </Popconfirm>
+          <Space>
+            <Button onClick={closeSubjectEditor}>取消</Button>
+            <Button type="primary" onClick={handleOk}>
+              保存
+            </Button>
+          </Space>
+        </div>
+      }
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <Form.Item name="name" label="姓名">
