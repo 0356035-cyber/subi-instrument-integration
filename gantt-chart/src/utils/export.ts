@@ -1,5 +1,21 @@
 import type { Resource, Subject, Task } from '../types';
+import {
+  buildScheduleExportFilename,
+  deserializePersistedSchedule,
+  serializePersistedState,
+  type PersistedScheduleState,
+  type ScheduleDomainState,
+} from './persistence';
 import { formatMinuteRange, minutesToHHmm } from './time';
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 function buildExportRows(
   tasks: Task[],
@@ -33,14 +49,11 @@ function buildExportRows(
     }));
 }
 
-/** P1 功能：CSV 导出 */
 export function exportScheduleToCSV(
-  tasks: Task[],
-  subjects: Subject[],
-  resources: Resource[],
-  filename = 'schedule.csv'
+  state: ScheduleDomainState,
+  filename?: string
 ): void {
-  const rows = buildExportRows(tasks, subjects, resources);
+  const rows = buildExportRows(state.tasks, state.subjects, state.resources);
   const headers = Object.keys(rows[0] ?? {});
 
   const csvContent = [
@@ -55,13 +68,50 @@ export function exportScheduleToCSV(
     ),
   ].join('\n');
 
+  const projectName =
+    state.projects.find((p) => p.id === state.settings.activeProjectId)?.name ??
+    'schedule';
   const blob = new Blob(['\uFEFF' + csvContent], {
     type: 'text/csv;charset=utf-8;',
   });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(
+    blob,
+    filename ??
+      buildScheduleExportFilename(
+        state.settings.visitDate,
+        projectName,
+        'csv'
+      )
+  );
+}
+
+export function exportScheduleToJSON(
+  state: ScheduleDomainState,
+  filename?: string
+): void {
+  const payload = serializePersistedState(state);
+  const projectName =
+    state.projects.find((p) => p.id === state.settings.activeProjectId)?.name ??
+    'schedule';
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: 'application/json;charset=utf-8;',
+  });
+  downloadBlob(
+    blob,
+    filename ??
+      buildScheduleExportFilename(
+        state.settings.visitDate,
+        projectName,
+        'json'
+      )
+  );
+}
+
+export function parseScheduleJSON(text: string): PersistedScheduleState | null {
+  try {
+    const raw = JSON.parse(text) as unknown;
+    return deserializePersistedSchedule(raw);
+  } catch {
+    return null;
+  }
 }

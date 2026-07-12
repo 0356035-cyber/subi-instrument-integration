@@ -1,12 +1,17 @@
 import {
+  DownloadOutlined,
   EditOutlined,
+  ImportOutlined,
   ReloadOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import { Button, Select, Space, TimePicker, Typography } from 'antd';
+import { Button, Dropdown, Select, Space, TimePicker, Typography, message } from 'antd';
+import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
+import { useRef } from 'react';
 import type { DisplayGranularity, DragMode, SnapGranularity } from '../types';
 import { useScheduleStore } from '../store/scheduleStore';
+import { exportScheduleToCSV, exportScheduleToJSON, parseScheduleJSON } from '../utils/export';
 import { hhmmToMinutes } from '../utils/time';
 import { AddSubjectButton } from './AddSubjectModal';
 import { ResourceManagerButton } from './ResourceManager';
@@ -33,17 +38,23 @@ const SNAP_OPTIONS: { value: SnapGranularity | 'none'; label: string }[] = [
 ];
 
 export function Toolbar() {
+  const importInputRef = useRef<HTMLInputElement>(null);
   const {
     settings,
     setSettings,
     runValidation,
     resetSampleData,
+    importSchedule,
     conflicts,
     projects,
+    subjects,
+    resources,
+    tasks,
     openProjectWorkflowEditor,
   } = useScheduleStore();
 
   const activeProject = projects.find((p) => p.id === settings.activeProjectId);
+  const exportState = { projects, subjects, resources, tasks, settings };
 
   const viewStart = dayjs()
     .hour(Math.floor(settings.viewStartMin / 60))
@@ -52,8 +63,49 @@ export function Toolbar() {
     .hour(Math.floor(settings.viewEndMin / 60))
     .minute(settings.viewEndMin % 60);
 
+  const exportMenuItems: MenuProps['items'] = [
+    {
+      key: 'csv',
+      label: '导出 CSV（排程表）',
+      onClick: () => exportScheduleToCSV(exportState),
+    },
+    {
+      key: 'json',
+      label: '导出 JSON（完整备份）',
+      onClick: () => exportScheduleToJSON(exportState),
+    },
+  ];
+
+  const handleImportJson = async (file: File) => {
+    const text = await file.text();
+    const parsed = parseScheduleJSON(text);
+    if (!parsed) {
+      message.error('无法识别排程文件，请确认是有效的 JSON 备份');
+      return;
+    }
+    const ok = importSchedule(parsed);
+    if (ok) {
+      message.success('排程数据已导入');
+    } else {
+      message.error('导入失败，文件格式不正确');
+    }
+  };
+
   return (
     <div className="toolbar-wrapper">
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json,.json"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            void handleImportJson(file);
+          }
+          e.target.value = '';
+        }}
+      />
       <div className="toolbar">
         <div className="toolbar-left">
           <Title level={4} style={{ margin: 0 }}>
@@ -132,6 +184,15 @@ export function Toolbar() {
             </Button>
             <ResourceManagerButton />
             <AddSubjectButton />
+            <Dropdown menu={{ items: exportMenuItems }} trigger={['click']}>
+              <Button icon={<DownloadOutlined />}>导出</Button>
+            </Dropdown>
+            <Button
+              icon={<ImportOutlined />}
+              onClick={() => importInputRef.current?.click()}
+            >
+              导入
+            </Button>
             <Button
               icon={<SafetyCertificateOutlined />}
               onClick={runValidation}
