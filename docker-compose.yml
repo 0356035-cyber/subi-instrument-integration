@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: subi_backend
     ports:
-      - "8001:8001"
+      - "${SUBI_API_HOST_PORT:-8001}:8001"
     volumes:
       - ./subi_knowledge_platform/data:/app/data
       - ./subi_knowledge_platform/uploads:/app/uploads
