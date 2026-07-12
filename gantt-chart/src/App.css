@@ -259,6 +259,53 @@ body {
   transition: box-shadow 0.15s;
 }
 
+.task-bar.compact {
+  padding: 2px 4px;
+  align-items: center;
+}
+
+.task-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.task-outside-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  max-width: 180px;
+  padding: 0 4px;
+  color: #262626;
+  font-size: 11px;
+  line-height: 1.25;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 3;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0));
+}
+
+.task-outside-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-outside-time {
+  color: #8c8c8c;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.task-tooltip {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .task-bar.dragging {
   opacity: 0.85;
   z-index: 20;
@@ -294,8 +341,35 @@ body {
   font-size: 10px;
 }
 
-.risk-panel {
+.side-panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   height: 100%;
+  padding: 12px;
+  overflow: auto;
+}
+
+.risk-panel {
+  flex: 0 0 auto;
+}
+
+.task-selection-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.task-selection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.task-selection-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
 }
 
 .risk-hint {

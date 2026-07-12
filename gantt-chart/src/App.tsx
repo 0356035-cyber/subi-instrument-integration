@@ -3,6 +3,7 @@ import { GanttChart } from './components/GanttChart';
 import { ProjectWorkflowEditor } from './components/ProjectWorkflowEditor';
 import { ResourceManagerModal } from './components/ResourceManager';
 import { RiskPanel } from './components/RiskPanel';
+import { TaskSelectionPanel } from './components/TaskSelectionPanel';
 import { SubjectInfoModal } from './components/SubjectInfoModal';
 import { Toolbar } from './components/Toolbar';
 import { useScheduleStore } from './store/scheduleStore';
@@ -41,7 +42,10 @@ export default function App() {
           />
         </Content>
         <Sider width={340} className="side-panel" theme="light">
-          <RiskPanel />
+          <div className="side-panel-stack">
+            <RiskPanel />
+            <TaskSelectionPanel />
+          </div>
         </Sider>
       </Layout>
       <ProjectWorkflowEditor />
