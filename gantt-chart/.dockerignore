@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+dev.bat
+terminals
+.DS_Store
+*.local
+.env
+.env.*
+tsconfig.tsbuildinfo
+vitest.config.ts
+**/__tests__

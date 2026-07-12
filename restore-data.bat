@@ -3,6 +3,27 @@ setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title Project Data Restore
 
+set "TARGET_ROOT="
+set "SOURCE_BACKUP_ROOT="
+:parse_args
+if "%~1"=="" goto args_done
+if /i "%~1"=="--target-root" (
+    set "TARGET_ROOT=%~2"
+    shift
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--backup-root" (
+    set "SOURCE_BACKUP_ROOT=%~2"
+    shift
+    shift
+    goto parse_args
+)
+echo [ERROR] Unknown argument: %~1
+echo Usage: restore-data.bat [--target-root ^<isolated-project-dir^>] [--backup-root ^<backup-dir^>]
+exit /b 2
+:args_done
+
 echo ========================================
 echo   Sub-I + Training System Restore
 echo ========================================
@@ -24,10 +45,24 @@ if not defined PROJECTS_DIR (
 echo Projects: %PROJECTS_DIR%
 echo.
 
+set "LIVE_PROJECTS_DIR=%PROJECTS_DIR%"
+if defined TARGET_ROOT (
+    for %%I in ("%TARGET_ROOT%") do set "PROJECTS_DIR=%%~fI"
+    if /i "!PROJECTS_DIR!"=="!LIVE_PROJECTS_DIR!" (
+        echo [ERROR] --target-root must not be the current project directory.
+        exit /b 2
+    )
+    echo [ISOLATED] Restore target: !PROJECTS_DIR!
+)
+
 set "TRAIN_DB=%PROJECTS_DIR%\instrument-training-home\data\instrument_training.db"
 set "SUBI_DB=%PROJECTS_DIR%\subi_knowledge_platform\data\subi_knowledge.db"
 set "SUBI_UPLOADS=%PROJECTS_DIR%\subi_knowledge_platform\uploads"
-set "BACKUP_ROOT=%PROJECTS_DIR%\backups"
+if defined SOURCE_BACKUP_ROOT (
+    for %%I in ("%SOURCE_BACKUP_ROOT%") do set "BACKUP_ROOT=%%~fI"
+) else (
+    set "BACKUP_ROOT=%LIVE_PROJECTS_DIR%\backups"
+)
 
 if not exist "%BACKUP_ROOT%" (
     echo [ERROR] No backups folder: %BACKUP_ROOT%
@@ -35,7 +70,7 @@ if not exist "%BACKUP_ROOT%" (
     exit /b 1
 )
 
-echo Projects: %PROJECTS_DIR%
+echo Restore target: %PROJECTS_DIR%
 echo Backups:  %BACKUP_ROOT%
 echo.
 
@@ -102,7 +137,9 @@ if "%WARN_RUNNING%"=="1" (
 )
 
 for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-dd_HHmmss'"`) do set "STAMP=%%T"
-set "SAFETY_DIR=%BACKUP_ROOT%\pre_restore_%STAMP%"
+set "SAFETY_ROOT=%BACKUP_ROOT%"
+if defined TARGET_ROOT set "SAFETY_ROOT=%PROJECTS_DIR%\backups"
+set "SAFETY_DIR=%SAFETY_ROOT%\pre_restore_%STAMP%"
 set "PY_SAFETY=%PROJECTS_DIR%\scripts\data_safety.py"
 
 echo [INFO] Saving current data to:

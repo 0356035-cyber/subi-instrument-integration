@@ -117,7 +117,8 @@ $checks = @(
     @{ Name = "Training bridge"; Url = "http://127.0.0.1:8001/integrations/training/health" },
     @{ Name = "Projects API"; Url = "http://127.0.0.1:8001/projects/meta" },
     @{ Name = "Training UI"; Url = "http://127.0.0.1:8501/_stcore/health" },
-    @{ Name = "Sub-I UI"; Url = "http://127.0.0.1:8510/_stcore/health" }
+    @{ Name = "Sub-I UI"; Url = "http://127.0.0.1:8510/_stcore/health" },
+    @{ Name = "Gantt UI"; Url = "http://127.0.0.1:8520/" }
 )
 foreach ($c in $checks) {
     try {

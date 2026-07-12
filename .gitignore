@@ -25,6 +25,8 @@ subi_knowledge_platform/
 # 本地临时/旧版文件
 app.py
 batch-test.json
+gantt-deploy-payload.tar.gz
+mcps/
 
 # IDE & OS
 .idea/

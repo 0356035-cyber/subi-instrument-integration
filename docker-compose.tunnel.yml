@@ -5,10 +5,11 @@
 #   2. 在 Cloudflare Zero Trust 为该 Tunnel 配置 Public Hostname：
 #        train.<你的域名> -> http://127.0.0.1:8501
 #        subi.<你的域名>  -> http://127.0.0.1:8510
+#        gantt.<你的域名> -> http://127.0.0.1:8520
 #   3. 启动：start-tunnel.bat  或
 #        docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
 #
-# 说明：cloudflared 使用 host 网络，以便访问宿主机上映射的 8501/8510 端口。
+# 说明：cloudflared 使用 host 网络，以便访问宿主机上映射的 8501/8510/8520 端口。
 # 若极空间不支持 network_mode: host，见《极空间部署说明.md》§6.2 备选方案。
 
 services:
@@ -24,4 +25,6 @@ services:
       instrument-training-home-frontend:
         condition: service_started
       subi-frontend:
+        condition: service_started
+      gantt-chart:
         condition: service_started
