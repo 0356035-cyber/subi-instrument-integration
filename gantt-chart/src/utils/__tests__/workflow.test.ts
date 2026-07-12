@@ -15,11 +15,13 @@ describe('buildTasksFromWorkflow', () => {
     expect(t1.map((t) => t.color)).toEqual(t2.map((t) => t.color));
   });
 
-  it('uses step colors on tasks', () => {
+  it('uses task type colors on tasks', () => {
     const tasks = buildTasksFromWorkflow('S01', hhmmToMinutes('09:00'), DEFAULT_WORKFLOW_STEPS);
-    const visia = tasks.find((t) => t.workflowStepId === 'bl-visia')!;
-    const step = DEFAULT_WORKFLOW_STEPS.find((s) => s.id === 'bl-visia')!;
-    expect(visia.color).toBe(step.color);
+    const blVisia = tasks.find((t) => t.workflowStepId === 'bl-visia')!;
+    const immVisia = tasks.find((t) => t.workflowStepId === 'imm-visia')!;
+    const visia30 = tasks.find((t) => t.workflowStepId === 'visia-30')!;
+    expect(blVisia.color).toBe(immVisia.color);
+    expect(blVisia.color).toBe(visia30.color);
   });
 
   it('offsets by arrival time', () => {

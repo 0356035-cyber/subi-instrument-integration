@@ -3,13 +3,14 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Tooltip } from 'antd';
 import type { Task, TaskRiskState } from '../types';
+import { colorWithAlpha } from '../utils/color';
 import {
   buildTaskTooltipLines,
   getTaskBarDisplayWidth,
-  getTaskShortLabel,
-  shouldShowOutsideLabel,
+  getTaskContentLabel,
+  getVisitPointBarLabel,
+  type TaskLabelLayout,
 } from '../utils/taskLabel';
-import { formatMinuteRange } from '../utils/time';
 
 type TaskBarProps = {
   task: Task;
@@ -17,6 +18,7 @@ type TaskBarProps = {
   leftPx: number;
   widthPx: number;
   rowHeight: number;
+  labelLayout: TaskLabelLayout;
   risk?: TaskRiskState;
   highlighted: boolean;
   onSelect: (taskId: string) => void;
@@ -28,6 +30,7 @@ export function TaskBar({
   leftPx,
   widthPx,
   rowHeight,
+  labelLayout,
   risk,
   highlighted,
   onSelect,
@@ -58,8 +61,11 @@ export function TaskBar({
   }
 
   const barWidth = getTaskBarDisplayWidth(widthPx);
-  const outsideLabel = shouldShowOutsideLabel(widthPx);
-  const barHeight = rowHeight - 8;
+  const contentLabel = getTaskContentLabel(task);
+  const visitPointLabel = getVisitPointBarLabel(task);
+  const isNarrow = labelLayout.mode === 'above';
+  const barTop = isNarrow ? 18 : 4;
+  const barHeight = rowHeight - (isNarrow ? 22 : 8);
 
   const dragTransform = transform
     ? CSS.Translate.toString({ ...transform, y: 0 })
@@ -77,10 +83,11 @@ export function TaskBar({
     <div
       ref={setNodeRef}
       id={`task-bar-${task.id}`}
-      className={`task-bar ${outsideLabel ? 'compact' : ''} ${isDragging ? 'dragging' : ''} ${task.locked ? 'locked' : ''}`}
+      className={`task-bar ${isNarrow ? 'compact' : ''} ${isDragging ? 'dragging' : ''} ${task.locked ? 'locked' : ''}`}
       style={{
         left: leftPx,
         width: barWidth,
+        top: barTop,
         height: barHeight,
         background,
         border,
@@ -98,20 +105,10 @@ export function TaskBar({
       {...attributes}
     >
       {task.locked && <LockOutlined className="task-lock" />}
-      {outsideLabel ? (
-        <span className="task-chip">{getTaskShortLabel(task)}</span>
+      {labelLayout.mode === 'inside' ? (
+        <span className="task-label">{contentLabel}</span>
       ) : (
-        <>
-          <span className="task-label">
-            <strong>{task.subjectId}</strong> {task.name}
-            {task.visitPoint && task.visitPoint !== 'Other' && (
-              <em className="visit-point"> [{task.visitPoint}]</em>
-            )}
-          </span>
-          <span className="task-time">
-            {formatMinuteRange(task.startMin, task.endMin)}
-          </span>
-        </>
+        <span className="task-chip">{visitPointLabel}</span>
       )}
     </div>
   );
@@ -121,23 +118,23 @@ export function TaskBar({
       <Tooltip title={tooltip} mouseEnterDelay={0.2}>
         {bar}
       </Tooltip>
-      {outsideLabel && (
+      {isNarrow && (
         <div
-          className="task-outside-label"
+          className="task-above-label"
           style={{
-            left: leftPx + barWidth + 4,
-            top: 4,
-            height: barHeight,
+            left: leftPx,
+            top: 0,
+            width: barWidth,
+            background: colorWithAlpha(taskColor, 0.22),
+            borderColor: colorWithAlpha(taskColor, 0.42),
+            color: '#262626',
           }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect(task.id);
           }}
         >
-          <span className="task-outside-name">{task.name}</span>
-          <span className="task-outside-time">
-            {formatMinuteRange(task.startMin, task.endMin)}
-          </span>
+          {contentLabel}
         </div>
       )}
     </>

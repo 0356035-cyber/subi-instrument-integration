@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_WORKFLOW_STEPS } from '../../data/defaultWorkflow';
 import {
   getDefaultColorForTaskType,
   getTaskTypeLabel,
+  getTaskTypeLegendItems,
   isPresetTaskType,
 } from '../taskType';
 
@@ -19,5 +21,12 @@ describe('taskType', () => {
   it('returns default color for custom types', () => {
     expect(getDefaultColorForTaskType('皮肤镜')).toBe('#595959');
     expect(getDefaultColorForTaskType('visia')).toBe('#722ed1');
+  });
+
+  it('deduplicates legend items by task type', () => {
+    const items = getTaskTypeLegendItems(DEFAULT_WORKFLOW_STEPS);
+    const visiaCount = items.filter((item) => item.taskType === 'visia').length;
+    expect(visiaCount).toBe(1);
+    expect(items.find((item) => item.taskType === 'visia')?.label).toBe('VISIA');
   });
 });

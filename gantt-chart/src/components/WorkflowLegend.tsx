@@ -1,6 +1,6 @@
 import { Typography } from 'antd';
 import type { WorkflowStepTemplate } from '../types';
-import { getTaskTypeLabel } from '../utils/taskType';
+import { getTaskTypeLegendItems } from '../utils/taskType';
 
 const { Text } = Typography;
 
@@ -11,24 +11,24 @@ export function WorkflowLegend({
   steps: WorkflowStepTemplate[];
   projectName: string;
 }) {
-  const sorted = [...steps].sort((a, b) => a.order - b.order);
+  const legendItems = getTaskTypeLegendItems(steps);
 
   return (
     <div className="workflow-legend">
       <Text type="secondary" style={{ fontSize: 12, marginRight: 8 }}>
         {projectName} · 环节配色：
       </Text>
-      {sorted.map((step) => (
+      {legendItems.map((item) => (
         <span
-          key={step.id}
+          key={item.taskType}
           className="workflow-legend-item"
-          title={`${step.name}（${getTaskTypeLabel(step.taskType)}）`}
+          title={item.label}
         >
           <span
             className="workflow-swatch"
-            style={{ background: step.color }}
+            style={{ background: item.color }}
           />
-          <Text style={{ fontSize: 12 }}>{step.name}</Text>
+          <Text style={{ fontSize: 12 }}>{item.label}</Text>
         </span>
       ))}
     </div>

@@ -4,6 +4,7 @@ import type {
   Task,
   WorkflowStepTemplate,
 } from '../types';
+import { getTaskDisplayColor } from './taskType';
 
 function sortedSteps(workflow: WorkflowStepTemplate[]): WorkflowStepTemplate[] {
   return [...workflow].sort((a, b) => a.order - b.order);
@@ -63,7 +64,7 @@ export function buildTasksFromWorkflow(
       isElastic: step.scheduling === 'elastic_fill',
       movable: true,
       status: 'planned',
-      color: step.color,
+      color: getTaskDisplayColor(step.taskType),
     };
 
     tasks.push(task);

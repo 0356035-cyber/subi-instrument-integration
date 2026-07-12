@@ -260,8 +260,9 @@ body {
 }
 
 .task-bar.compact {
-  padding: 2px 4px;
+  padding: 2px 3px;
   align-items: center;
+  justify-content: center;
 }
 
 .task-chip {
@@ -269,36 +270,32 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
+  white-space: nowrap;
 }
 
-.task-outside-label {
+.task-above-label {
   position: absolute;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 1px;
-  max-width: 180px;
-  padding: 0 4px;
-  color: #262626;
-  font-size: 11px;
-  line-height: 1.25;
+  min-height: 16px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: visible;
+  text-align: center;
   pointer-events: auto;
   cursor: pointer;
   z-index: 3;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0));
+  border: 1px solid transparent;
+  border-radius: 4px;
 }
 
-.task-outside-name {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.task-outside-time {
-  color: #8c8c8c;
-  font-size: 10px;
-  white-space: nowrap;
+.task-above-label:hover {
+  z-index: 12;
 }
 
 .task-tooltip {
@@ -321,12 +318,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.3;
-  font-size: 12px;
-}
-
-.task-label .visit-point {
-  font-style: normal;
-  opacity: 0.9;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .task-time {

@@ -17,6 +17,8 @@ import {
   getTimelineWidthPx,
   minutesToPixels,
 } from '../utils/layout';
+import { computeTaskLabelLayouts } from '../utils/taskLabel';
+import { getTaskDisplayColor } from '../utils/taskType';
 import { TaskBar } from './TaskBar';
 import { TimeAxis } from './TimeAxis';
 
@@ -217,35 +219,45 @@ export function GanttChart({
                       }}
                     />
                   ))}
-                  {(tasksByRow.get(row.id) ?? []).map((task) => {
-                    const leftPx = minutesToPixels(
-                      task.startMin,
-                      settings.viewStartMin,
-                      granularity
+                  {(() => {
+                    const rowTasks = (tasksByRow.get(row.id) ?? []).flatMap(
+                      (task) => {
+                        const leftPx = minutesToPixels(
+                          task.startMin,
+                          settings.viewStartMin,
+                          granularity
+                        );
+                        const widthPx = (task.endMin - task.startMin) * pxPerMin;
+
+                        if (
+                          task.endMin < settings.viewStartMin ||
+                          task.startMin > settings.viewEndMin
+                        ) {
+                          return [];
+                        }
+
+                        return [{ task, leftPx, widthPx }];
+                      }
                     );
-                    const widthPx = (task.endMin - task.startMin) * pxPerMin;
+                    const labelLayouts = computeTaskLabelLayouts(rowTasks);
 
-                    if (
-                      task.endMin < settings.viewStartMin ||
-                      task.startMin > settings.viewEndMin
-                    ) {
-                      return null;
-                    }
-
-                    return (
+                    return rowTasks.map(({ task, leftPx, widthPx }) => (
                       <TaskBar
                         key={task.id}
                         task={task}
-                        taskColor={task.color}
+                        taskColor={getTaskDisplayColor(task.taskType)}
                         leftPx={leftPx}
                         widthPx={widthPx}
                         rowHeight={ROW_HEIGHT}
+                        labelLayout={
+                          labelLayouts.get(task.id) ?? { mode: 'inside' }
+                        }
                         risk={taskRiskMap.get(task.id)}
                         highlighted={highlightedTaskIds.has(task.id)}
                         onSelect={onSelectTask}
                       />
-                    );
-                  })}
+                    ));
+                  })()}
                 </div>
               </div>
             ))}

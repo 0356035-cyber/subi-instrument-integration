@@ -68,7 +68,7 @@ export function TaskSelectionPanel() {
         <Descriptions.Item label="状态">{task.status}</Descriptions.Item>
       </Descriptions>
       <Text type="secondary" className="task-selection-hint">
-        短环节条较窄时，文字可能显示不全；悬停色块可看完整提示。
+        窄环节色块内显示访视点，上方居中显示完整项目内容；悬停可看时间与详情。
       </Text>
     </div>
   );
