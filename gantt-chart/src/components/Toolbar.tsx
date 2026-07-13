@@ -16,6 +16,7 @@ import { hhmmToMinutes } from '../utils/time';
 import { AddSubjectButton } from './AddSubjectModal';
 import { ResourceManagerButton } from './ResourceManager';
 import { WorkflowLegend } from './WorkflowLegend';
+import { OptimizeScheduleButton } from './OptimizeScheduleModal';
 
 const { Title, Text } = Typography;
 
@@ -184,6 +185,7 @@ export function Toolbar() {
             </Button>
             <ResourceManagerButton />
             <AddSubjectButton />
+            <OptimizeScheduleButton />
             <Dropdown menu={{ items: exportMenuItems }} trigger={['click']}>
               <Button icon={<DownloadOutlined />}>导出</Button>
             </Dropdown>

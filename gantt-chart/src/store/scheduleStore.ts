@@ -20,6 +20,8 @@ import {
   type PersistedScheduleState,
 } from '../utils/persistence';
 import { createSubject, generateNextSubjectId } from '../utils/subjectFactory';
+import { planBatchSchedule, type AutoSchedulePlan } from '../utils/autoSchedule';
+import { solveExactSchedule } from '../utils/exactOptimizer';
 import {
   buildTasksFromWorkflow,
   normalizeStepOrders,
@@ -47,6 +49,24 @@ type ScheduleState = {
     arrivalMin: number,
     projectId: string
   ) => void;
+  previewOptimizedSubjects: (
+    count: number,
+    startMin: number,
+    endMin: number,
+    stepMin: number,
+    projectId: string
+  ) => OptimizedSubjectPlan | null;
+  commitOptimizedSubjects: (candidate: OptimizedSubjectPlan) => void;
+  previewRescheduleScheduledSubjects: (
+    startMin: number,
+    endMin: number,
+    stepMin: number,
+    projectId: string
+  ) => OptimizedReschedulePlan | null;
+  commitRescheduledSubjects: (candidate: OptimizedReschedulePlan) => void;
+  previewExactRescheduleScheduledSubjects: (startMin: number, endMin: number, stepMin: number, projectId: string) => Promise<OptimizedReschedulePlan | null>;
+  previewInsertAndExactReschedule: (count: number, startMin: number, endMin: number, stepMin: number, projectId: string) => Promise<OptimizedInsertPlan | null>;
+  commitInsertAndExactReschedule: (candidate: OptimizedInsertPlan) => void;
   updateSubject: (
     subjectId: string,
     patch: Partial<Pick<Subject, 'name' | 'arrivalMin' | 'status'>>
@@ -72,6 +92,25 @@ type ScheduleState = {
   runValidation: () => void;
   importSchedule: (data: PersistedScheduleState) => boolean;
   resetSampleData: () => void;
+};
+
+export type OptimizedSubjectPlan = {
+  plan: AutoSchedulePlan;
+  subjects: Subject[];
+};
+
+export type OptimizedReschedulePlan = {
+  plan: AutoSchedulePlan;
+  subjects: Subject[];
+  exact?: true;
+  overloadMinutes?: number;
+};
+
+export type OptimizedInsertPlan = {
+  plan: AutoSchedulePlan;
+  updatedSubjects: Subject[];
+  newSubjects: Subject[];
+  overloadMinutes: number;
 };
 
 function revalidate(
@@ -199,6 +238,146 @@ export const useScheduleStore = create<ScheduleState>()(
         set({
           subjects: [...subjects, subject],
           tasks: updatedTasks,
+          ...validation,
+        });
+      },
+
+      previewOptimizedSubjects: (count, startMin, endMin, stepMin, projectId) => {
+        const { subjects, tasks, resources, settings, projects } = get();
+        const project = projects.find((item) => item.id === projectId);
+        const safeCount = Math.floor(count);
+        if (!project || safeCount < 1 || endMin <= startMin) return null;
+
+        const plannedSubjects = [...subjects];
+        const subjectIds: string[] = [];
+        for (let index = 0; index < safeCount; index += 1) {
+          const id = generateNextSubjectId(plannedSubjects);
+          subjectIds.push(id);
+          plannedSubjects.push(createSubject(id, startMin, settings.visitDate, projectId));
+        }
+
+        const plan = planBatchSchedule(tasks, project.workflowSteps, resources, {
+          subjectIds,
+          startMin,
+          endMin,
+          stepMin,
+        });
+        if (plan.unscheduledSubjectIds.length > 0) {
+          return { plan, subjects: [] };
+        }
+
+        const addedSubjects = plan.assignments.map((assignment) =>
+          createSubject(assignment.subjectId, assignment.arrivalMin, settings.visitDate, projectId)
+        );
+        return { plan, subjects: addedSubjects };
+      },
+
+      commitOptimizedSubjects: (candidate) => {
+        const { resources } = get();
+        const validation = revalidate(candidate.plan.tasks, resources);
+        set({
+          subjects: [...get().subjects, ...candidate.subjects],
+          tasks: candidate.plan.tasks,
+          ...validation,
+        });
+      },
+
+      previewRescheduleScheduledSubjects: (startMin, endMin, stepMin, projectId) => {
+        const { subjects, tasks, resources, projects } = get();
+        const project = projects.find((item) => item.id === projectId);
+        if (!project || endMin <= startMin) return null;
+
+        // 已到场、已完成、已取消受试者视为锁定，不参与重新排程。
+        const targets = subjects.filter(
+          (subject) => subject.projectId === projectId && subject.status === 'scheduled'
+        );
+        if (targets.length === 0) return null;
+        const targetIds = new Set(targets.map((subject) => subject.id));
+        const fixedTasks = tasks.filter((task) => !targetIds.has(task.subjectId));
+        const plan = planBatchSchedule(fixedTasks, project.workflowSteps, resources, {
+          subjectIds: targets.map((subject) => subject.id),
+          startMin,
+          endMin,
+          stepMin,
+        });
+        if (plan.unscheduledSubjectIds.length > 0) return { plan, subjects: [] };
+
+        const arrivalBySubjectId = new Map(
+          plan.assignments.map((assignment) => [assignment.subjectId, assignment.arrivalMin])
+        );
+        return {
+          plan,
+          subjects: targets.map((subject) => ({
+            ...subject,
+            arrivalMin: arrivalBySubjectId.get(subject.id) ?? subject.arrivalMin,
+          })),
+        };
+      },
+
+      previewExactRescheduleScheduledSubjects: async (startMin, endMin, stepMin, projectId) => {
+        const { subjects, tasks, resources, projects } = get();
+        const project = projects.find((item) => item.id === projectId);
+        const targets = subjects.filter((subject) => subject.projectId === projectId && subject.status === 'scheduled');
+        if (!project || targets.length === 0 || endMin <= startMin) return null;
+        const targetIds = new Set(targets.map((subject) => subject.id));
+        const result = await solveExactSchedule(tasks.filter((task) => !targetIds.has(task.subjectId)), project.workflowSteps, resources, {
+          subjectIds: targets.map((subject) => subject.id), startMin, endMin, stepMin,
+        });
+        if (result.status !== 'optimal') return null;
+        const arrivalById = new Map(result.assignments.map((assignment) => [assignment.subjectId, assignment.arrivalMin]));
+        return {
+          exact: true,
+          overloadMinutes: result.overloadMinutes,
+          plan: { assignments: result.assignments.map((assignment) => ({ ...assignment, newConflictCount: 0, newOverlapMin: 0 })), tasks: result.tasks, unscheduledSubjectIds: [] },
+          subjects: targets.map((subject) => ({ ...subject, arrivalMin: arrivalById.get(subject.id) ?? subject.arrivalMin })),
+        };
+      },
+
+      previewInsertAndExactReschedule: async (count, startMin, endMin, stepMin, projectId) => {
+        const { subjects, tasks, resources, projects, settings } = get();
+        const project = projects.find((item) => item.id === projectId);
+        const safeCount = Math.floor(count);
+        if (!project || safeCount < 1 || endMin <= startMin) return null;
+        const scheduled = subjects.filter((subject) => subject.projectId === projectId && subject.status === 'scheduled');
+        const idsForGeneration = [...subjects];
+        const newIds: string[] = [];
+        for (let index = 0; index < safeCount; index += 1) {
+          const id = generateNextSubjectId(idsForGeneration);
+          newIds.push(id);
+          idsForGeneration.push(createSubject(id, startMin, settings.visitDate, projectId));
+        }
+        const movableIds = new Set([...scheduled.map((subject) => subject.id), ...newIds]);
+        const result = await solveExactSchedule(tasks.filter((task) => !movableIds.has(task.subjectId)), project.workflowSteps, resources, {
+          subjectIds: [...scheduled.map((subject) => subject.id), ...newIds], startMin, endMin, stepMin,
+        });
+        if (result.status !== 'optimal') return null;
+        const arrivalById = new Map(result.assignments.map((assignment) => [assignment.subjectId, assignment.arrivalMin]));
+        return {
+          plan: { assignments: result.assignments.map((assignment) => ({ ...assignment, newConflictCount: 0, newOverlapMin: 0 })), tasks: result.tasks, unscheduledSubjectIds: [] },
+          updatedSubjects: scheduled.map((subject) => ({ ...subject, arrivalMin: arrivalById.get(subject.id) ?? subject.arrivalMin })),
+          newSubjects: newIds.map((id) => createSubject(id, arrivalById.get(id) ?? startMin, settings.visitDate, projectId)),
+          overloadMinutes: result.overloadMinutes,
+        };
+      },
+
+      commitInsertAndExactReschedule: (candidate) => {
+        const { subjects, resources } = get();
+        const replacements = new Map(candidate.updatedSubjects.map((subject) => [subject.id, subject]));
+        const validation = revalidate(candidate.plan.tasks, resources);
+        set({
+          subjects: [...subjects.map((subject) => replacements.get(subject.id) ?? subject), ...candidate.newSubjects],
+          tasks: candidate.plan.tasks,
+          ...validation,
+        });
+      },
+
+      commitRescheduledSubjects: (candidate) => {
+        const { subjects, resources } = get();
+        const replacementById = new Map(candidate.subjects.map((subject) => [subject.id, subject]));
+        const validation = revalidate(candidate.plan.tasks, resources);
+        set({
+          subjects: subjects.map((subject) => replacementById.get(subject.id) ?? subject),
+          tasks: candidate.plan.tasks,
           ...validation,
         });
       },
