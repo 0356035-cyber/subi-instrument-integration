@@ -13,9 +13,9 @@ grok-proxy.env
 # Runtime & local tooling
 terminals/
 agent-tools/
-data/
-uploads/
-backups/
+/data/
+/uploads/
+/backups/
 *.log
 
 # 子项目为独立 Git 仓库，不纳入本仓库版本控制
