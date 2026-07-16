@@ -75,7 +75,7 @@ echo Backups:  %BACKUP_ROOT%
 echo.
 
 set "COUNT=0"
-for /f "delims=" %%D in ('dir /b /ad /o-n "%BACKUP_ROOT%" 2^>nul') do (
+for /f "delims=" %%D in ('dir /b /ad /o-n "%BACKUP_ROOT%" 2^>nul ^| findstr /r "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_"') do (
     set /a COUNT+=1
     set "BDIR_!COUNT!=%%D"
 )
@@ -106,6 +106,17 @@ if %CHOICE% GTR %COUNT% (
 
 set "SELECTED=!BDIR_%CHOICE%!"
 set "SRC=%BACKUP_ROOT%\!SELECTED!"
+
+if not defined SELECTED (
+    echo [ERROR] No valid timestamped backup was selected.
+    pause
+    exit /b 1
+)
+if not exist "%SRC%" (
+    echo [ERROR] Backup folder not found: %SRC%
+    pause
+    exit /b 1
+)
 
 echo.
 echo Restore from: !SELECTED!
