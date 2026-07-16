@@ -8,7 +8,9 @@ if not defined PROJECTS_DIR set "PROJECTS_DIR=%~dp0"
 if "%PROJECTS_DIR:~-1%"=="\" set "PROJECTS_DIR=%PROJECTS_DIR:~0,-1%"
 
 set "SUBI_REPO=%PROJECTS_DIR%\subi_knowledge_platform"
+set "TRAIN_REPO=%PROJECTS_DIR%\instrument-training-home"
 set "SUBI_DB=%SUBI_REPO%\data\subi_knowledge.db"
+set "TRAIN_DB=%TRAIN_REPO%\data\instrument_training.db"
 set "BACKUP_ROOT=%PROJECTS_DIR%\backups"
 set "PY=%PROJECTS_DIR%\scripts\data_safety.py"
 set "FAIL=0"
@@ -19,6 +21,8 @@ echo ========================================
 echo.
 
 python "%PY%" check-git "%SUBI_REPO%"
+if errorlevel 1 set "FAIL=1"
+python "%PY%" check-git "%TRAIN_REPO%"
 if errorlevel 1 set "FAIL=1"
 
 for /f "delims=" %%D in ('dir /b /ad /o-n "%BACKUP_ROOT%" 2^>nul ^| findstr /r "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_"') do (
@@ -38,6 +42,13 @@ if not defined LATEST (
         echo [FAIL] Latest backup missing subi_knowledge.db
         set "FAIL=1"
     )
+    if exist "%BACKUP_ROOT%\%LATEST%\instrument_training.db" (
+        python "%PY%" verify "%BACKUP_ROOT%\%LATEST%\instrument_training.db"
+        if errorlevel 1 set "FAIL=1"
+    ) else (
+        echo [FAIL] Latest backup missing instrument_training.db
+        set "FAIL=1"
+    )
 )
 
 if exist "%SUBI_DB%" (
@@ -45,6 +56,13 @@ if exist "%SUBI_DB%" (
     if errorlevel 1 set "FAIL=1"
 ) else (
     echo [WARN] Live database not found: %SUBI_DB%
+)
+
+if exist "%TRAIN_DB%" (
+    python "%PY%" verify "%TRAIN_DB%"
+    if errorlevel 1 set "FAIL=1"
+) else (
+    echo [WARN] Live database not found: %TRAIN_DB%
 )
 
 echo.
