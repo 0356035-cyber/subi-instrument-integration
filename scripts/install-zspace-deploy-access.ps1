@@ -55,7 +55,7 @@ Invoke-Native -FailureMessage "Failed to stage the NAS deployment script." -Comm
     ssh $NasAlias "umask 077; mkdir -p /tmp/projects-deploy; printf '%s' '$scriptBase64' | base64 -d > /tmp/projects-deploy/projects-deploy"
 }
 
-$sudoersLine = $NasUser + ' ALL=(root) NOPASSWD: /usr/local/sbin/projects-deploy ""'
+$sudoersLine = $NasUser + ' ALL=(root) NOPASSWD: /usr/local/sbin/projects-deploy'
 $remoteInstall = "sudo install -o root -g root -m 750 /tmp/projects-deploy/projects-deploy /usr/local/sbin/projects-deploy; printf '%s\n' '$sudoersLine' | sudo tee /etc/sudoers.d/projects-deploy >/dev/null; sudo chmod 440 /etc/sudoers.d/projects-deploy; sudo visudo -cf /etc/sudoers.d/projects-deploy"
 
 Write-Host ""

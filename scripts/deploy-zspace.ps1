@@ -82,6 +82,10 @@ try {
     Invoke-Native -FailureMessage "Docker image export failed." -Command { docker save -o $imageArchive @images }
 
     Write-Host "[3/6] Creating code package without business data or runtime configuration..."
+    $archiveSources = @(
+        Get-ChildItem -Force -LiteralPath $projectRoot |
+            Select-Object -ExpandProperty Name
+    )
     $tarArguments = @(
         "-czf", $codeArchive,
         "--exclude=.git", "--exclude=*/.git",
@@ -99,8 +103,8 @@ try {
         "--exclude=terminals", "--exclude=.pytest_cache",
         "--exclude=docker-images-*.tar", "--exclude=projects-code-*.tar.gz",
         "--exclude=projects-code-deploy.tar.gz", "--exclude=gantt-*-deploy*.tar.gz",
-        "-C", $projectRoot, "."
-    )
+        "-C", $projectRoot
+    ) + $archiveSources
     Invoke-Native -FailureMessage "Code package creation failed." -Command { tar @tarArguments }
 
     $archiveEntries = @(tar -tzf $codeArchive)
