@@ -6,7 +6,8 @@ param(
     [int]$TrainingApiPort = 8000,
     [int]$SubiApiPort = 18001,
     [int]$TrainingUiPort = 8501,
-    [int]$SubiUiPort = 8510
+    [int]$SubiUiPort = 8510,
+    [string]$DeploymentConfirmation = ""
 )
 
 Set-StrictMode -Version Latest
@@ -57,7 +58,11 @@ Invoke-Native -FailureMessage "SSH public-key authentication failed. Run 安装�
 
 Write-Host ""
 Write-Host "This deploy will build Docker images, upload code and images, back up NAS databases/uploads/configuration, then restart the NAS stack."
-if ((Read-Host "Type DEPLOY to continue") -cne "DEPLOY") {
+$confirmation = $DeploymentConfirmation
+if (-not $confirmation) {
+    $confirmation = Read-Host "Type DEPLOY to continue"
+}
+if ($confirmation -cne "DEPLOY") {
     Write-Host "Deployment cancelled."
     exit 0
 }
