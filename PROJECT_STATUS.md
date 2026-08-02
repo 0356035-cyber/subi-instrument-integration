@@ -68,6 +68,7 @@ Report 仍是下一功能阶段，但本轮不开发 Report、不启动 AI Works
 - **§14.12 权限 MVP：** `permissions.py`、`ProjectMember`、`AuditLog`、`ProjectLeadNotification`、`audience_scope`
 - **阶段 4 Dataset：** Excel 上传、sheet 预览、列映射、草稿/已确认
 - **受控仪器数据整理：** TEWL/Corneo 原始导出可自动生成角质层水分与 TEWL 分析数据集；其他仪器格式仍待逐项验证
+- **受控人口学与问卷整理：** 受试者信息和自我评估问卷支持合并或拆分 Excel 上传，派生数据集去除直接身份信息；自动年龄/性别汇总及问卷精确二项检验待本轮重建后进行页面验证
 - **阶段 5 Analysis：** 配对比较 / 改变率 / 有效率，执行留痕 `log_json`
 - 培训人员同步：`POST /users/sync-from-training`（默认仅新增）
 - 侧边栏改密 + 改密后自动登出
