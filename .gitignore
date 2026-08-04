@@ -26,8 +26,11 @@ subi_knowledge_platform/
 app.py
 batch-test.json
 gantt-deploy-payload.tar.gz
+gantt-chart-deploy*.tar.gz
 docker-images-latest.tar
+docker-images-*.tar
 projects-code.tar.gz
+projects-code-*.tar.gz
 projects-code-deploy.tar.gz
 mcps/
 
