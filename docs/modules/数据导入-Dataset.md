@@ -15,13 +15,13 @@
 
 ## 第一版功能
 
-- [x] 上传 Excel（.xlsx）
+- [x] 上传 `.xlsx`，以及固定格式仪器 SpreadsheetML `.xml`
 - [x] 选择 sheet
 - [x] 预览前 20 行
 - [x] 识别样品编号 / 访视 / 指标列（含人工确认）
 - [x] 保存 `Dataset` 记录
 - [x] 项目详情「数据集」Tab 可用
-- [x] TEWL/Corneo 受控仪器模板：保留原始文件，并从 `CM825 Single`、`TMHex` 原始 Sheet 自动生成角质层水分与 TEWL 分析数据集
+- [x] 固定格式仪器受控模板：保留原始文件，并从 `CM825 Single`、`TMHex`、`GL200`、`SM815` 及 VC20 SpreadsheetML 自动生成对应分析数据集
 - [x] 受试者信息/自我评估问卷受控模板：支持合并或拆分 Excel 上传，生成去标识化人口学与问卷分析数据集
 
 ---
@@ -41,20 +41,44 @@ API 前缀：`/projects/{id}/datasets`
 
 ---
 
-## TEWL/Corneo 受控自动整理
+## 固定格式仪器受控自动整理
 
-当用户上传包含 `CM825 Single` 或 `TMHex` 的 `.xlsx` 文件时，系统自动识别为 `tewl_corneo_v1` 模板并将来源标记为“仪器数据”；不要求上传时手动选择类型，也不要求两个 Sheet 同时存在：
+当用户上传包含 `CM825 Single`、`TMHex`、`GL200` 或 `SM815` 的 `.xlsx` 文件时，系统自动识别为 `instrument_raw_v1` 模板并将来源标记为“仪器数据”；不要求上传时手动选择类型，各原始 Sheet 可单独上传，也可位于同一工作簿：
 
 - `Subject` 按“项目编码 - 访视事件 - 受试者编号”拆分；前三段构成项目编码，随后两段分别作为访视与受试者编号。
 - 解析出的项目编码必须与当前 Project 的 `project_code` 一致；解析失败、项目不一致、缺失值和重复值均记录为异常。
 - 存在 `CM825 Single` 时，仅读取 `Hydration`，按受试者、访视、`Tags` 分组；每组恰有 3 条有效数据时计算 `hydration_mean`。
 - 读取会包含 Excel 中的隐藏行；隐藏仅影响显示，不会使原始测量被遗漏。
 - 存在 `TMHex` 时，仅读取 `TEWL Robust [g/m²/h]`；每个受试者、访视、`Tags` 组合必须恰有 1 条有效数据，输出 `tewl_robust`。
+- 存在 `GL200` 时，仅读取原始 Sheet 的 `Gloss`，不读取 `GL200 Avg`、总览或其他参数列。`Subject` 可使用“项目编码-访视-受试者-侧别”或“项目编码-BL-访视-受试者-侧别”格式；后者的实际访视取第二个访视段，例如 `BL-15MIN` 输出为 `15MIN`。每组 3 条有效 `Gloss` 原始值计算 `GLOSS`，`Tags` 为空时以 Subject 中的左右侧作为标签。
+- 存在 `SM815` 时，仅读取原始 Sheet 的 `Sebum`，不读取 `SM815 Avg` 或总览 Sheet；每个受试者、访视、标签组合必须恰有 1 条有效数据，输出 `Sebum`。
 - 原始仪器文件仍保存为 `Instrument Data`；每个已识别参数各自生成一个 `Analysis Dataset`，自动完成 `subject_id`、`visit_code` 与指标列映射。
+- 页面将“分析数据集”和“原始仪器档案”分区显示。原始仪器档案只承担来源追溯，不显示为待统计的草稿，也不提供确认映射入口；统计仅使用 Analysis Dataset。
 - 无异常时派生数据集自动确认；有异常时保留草稿，不进入 Analysis，直到人工核对。
 - 派生数据集通过 `source_dataset_id` 关联原始数据集，并在 `processing_log_json` 保留模板、行数、规则与异常记录。
 
-当前仅支持该受控模板。问卷宽表、XML 和其他仪器格式仍须单独设计规则，不能按本模板猜测处理。
+当前仅支持上述固定格式的原始 Sheet。问卷宽表、XML 和其他仪器格式仍须单独设计规则，不能按本模板猜测处理。
+
+### VISIA 汇总 Excel
+
+当上传 `.xlsx` 文件且仅 `汇总` Sheet 满足“首列为研究号、第一行指标组、第二行访视”的两行表头结构时，系统按 `visia_summary_v1` 模板处理；`Sheet1`、`Sheet2` 等其他工作表不会参与读取：
+
+- 文件名必须包含当前 Project 的 `project_code`，用于补足汇总表中缺失的项目编号校验。
+- 系统将宽表转换为 `subject_id`、`visit_code` 和各指标列的长表；研究号按数值研究号规则标准化，因而 `01` 与 `1` 可与同一项目的其他数据源匹配。
+- 指标名称取自第一行，例如 `a*值`、`红区面积占比`；访视取自第二行。源表中的 `15MIM` 统一记为 `15MIN`，该转换写入处理日志。
+- 每个研究号和访视仅允许一条记录；缺失、非数值或重复记录均列为异常。无异常时自动确认，随后按既有连续型前后配对规则进入 Analysis。
+- 原始 VISIA 文件不被改写，生成独立 `.xlsx` Analysis Dataset，并保留来源关系、输入输出行数、表头规则与异常记录。
+
+### VC20 SpreadsheetML XML
+
+当上传 `.xml` 文件且其中含 `Measurements` 工作表、`Study`、`Subject Code`、`Position`、`SEr`、`SEsc`、`SEsm`、`SEw` 固定列时，系统按 `vc20_spreadsheetml_v1` 受控模板处理：
+
+- `Study` 必须与当前 Project 的 `project_code` 一致；`Subject Code` 按“研究号-访视节点”拆为 `subject_id`、`visit_code`，例如 `01-BL`。
+- `Position` 保留为 `tag`，例如 `FACE-L`、`FACE-R`；相同研究号、访视和位置不得有重复记录。
+- 每个有效原始行输出一条包含 `SEr`、`SEsc`、`SEsm`、`SEw` 的 VC20 分析数据。四项参数处于同一数据集，可由现有自动配对分析分别纳入批量比较。
+- 原始 XML 始终保留；派生分析数据以 `.xlsx` 存储。缺列、项目不一致、Subject Code 格式错误、重复记录或指标非数值均记为异常，派生数据集保留草稿待人工核对。
+
+其他 XML 不按 VC20 规则推断或自动转换。
 
 ---
 
