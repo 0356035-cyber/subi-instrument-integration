@@ -6,7 +6,7 @@ import type {
   Task,
 } from '../types';
 import { getTaskDisplayColor } from '../utils/taskType';
-import { hhmmToMinutes } from '../utils/time';
+import { hhmmToMinutes, todayVisitDate } from '../utils/time';
 import { DEFAULT_WORKFLOW_STEPS } from './defaultWorkflow';
 
 export const sampleResources: Resource[] = [
@@ -48,7 +48,7 @@ export const defaultSettings: ScheduleSettings = {
   viewEndMin: hhmmToMinutes('12:00'),
   timezone: 'Asia/Shanghai',
   dragMode: 'single',
-  visitDate: '2026-07-08',
+  visitDate: todayVisitDate(),
   activeProjectId: 'project-skin-01',
   timelineScale: 2,
 };

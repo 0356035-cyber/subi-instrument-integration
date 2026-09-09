@@ -5,6 +5,9 @@ import type {
   Subject,
   Task,
 } from '../types';
+import { todayVisitDate } from './time';
+
+const LEGACY_SAMPLE_VISIT_DATE = '2026-07-08';
 
 export const PERSISTENCE_VERSION = 1;
 export const STORAGE_KEY = 'clinical-gantt-schedule-v1';
@@ -67,10 +70,21 @@ export function deserializePersistedSchedule(
     settings.timelineScale = 2;
   }
 
+  const subjects = raw.subjects as Subject[];
+  if (settings.visitDate === LEGACY_SAMPLE_VISIT_DATE) {
+    const nextDate = todayVisitDate();
+    settings.visitDate = nextDate;
+    for (const subject of subjects) {
+      if (subject.visitDate === LEGACY_SAMPLE_VISIT_DATE) {
+        subject.visitDate = nextDate;
+      }
+    }
+  }
+
   return {
     version: PERSISTENCE_VERSION,
     projects: raw.projects as Project[],
-    subjects: raw.subjects as Subject[],
+    subjects,
     resources: raw.resources as Resource[],
     tasks: raw.tasks as Task[],
     settings,

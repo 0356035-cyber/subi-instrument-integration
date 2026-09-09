@@ -28,4 +28,22 @@ describe('persistence helpers', () => {
       '皮肤临床研究-2026-07-08.csv'
     );
   });
+
+  it('replaces the legacy sample visit date on load', () => {
+    const initial = getInitialState();
+    const serialized = serializePersistedState({
+      ...initial,
+      settings: { ...initial.settings, visitDate: '2026-07-08' },
+      subjects: initial.subjects.map((subject) => ({
+        ...subject,
+        visitDate: '2026-07-08',
+      })),
+    });
+    const restored = deserializePersistedSchedule(serialized);
+    expect(restored?.settings.visitDate).not.toBe('2026-07-08');
+    expect(restored?.settings.visitDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(restored?.subjects.every((subject) => subject.visitDate !== '2026-07-08')).toBe(
+      true
+    );
+  });
 });

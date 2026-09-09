@@ -5,6 +5,7 @@ import {
   hhmmToMinutes,
   minutesToHHmm,
   snapMinutes,
+  todayVisitDate,
 } from '../time';
 
 describe('snapMinutes', () => {
@@ -20,6 +21,12 @@ describe('snapMinutes', () => {
   it('snaps ceil and floor', () => {
     expect(snapMinutes(17, 5, 'ceil')).toBe(20);
     expect(snapMinutes(17, 5, 'floor')).toBe(15);
+  });
+});
+
+describe('todayVisitDate', () => {
+  it('returns YYYY-MM-DD in Asia/Shanghai', () => {
+    expect(todayVisitDate()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
 

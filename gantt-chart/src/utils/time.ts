@@ -30,6 +30,16 @@ export const snapTime = (
   return d;
 };
 
+/** 甘特图访视日期（YYYY-MM-DD），默认用上海时区当天。 */
+export function todayVisitDate(timeZone = 'Asia/Shanghai'): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
 export function hhmmToMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(':').map(Number);
   return h * 60 + m;

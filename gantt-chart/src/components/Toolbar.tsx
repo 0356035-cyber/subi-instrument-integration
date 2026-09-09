@@ -4,7 +4,7 @@ import {
   ImportOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import { Button, Dropdown, Select, Slider, Space, TimePicker, Typography, message } from 'antd';
+import { Button, DatePicker, Dropdown, Select, Slider, Space, TimePicker, Typography, message } from 'antd';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { useRef } from 'react';
@@ -43,6 +43,7 @@ export function Toolbar() {
   const {
     settings,
     setSettings,
+    setVisitDate,
     runValidation,
     importSchedule,
     conflicts,
@@ -111,7 +112,12 @@ export function Toolbar() {
           <Title level={4} style={{ margin: 0 }}>
             {activeProject?.name ?? '临床研究排程'}
           </Title>
-          <Text type="secondary">{settings.visitDate}</Text>
+          <span className="toolbar-label">访视日期</span>
+          <DatePicker
+            allowClear={false}
+            value={dayjs(settings.visitDate)}
+            onChange={(value) => value && setVisitDate(value.format('YYYY-MM-DD'))}
+          />
         </div>
 
         <div className="toolbar-center">

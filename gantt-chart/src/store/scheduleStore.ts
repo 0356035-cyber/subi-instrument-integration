@@ -47,6 +47,7 @@ type ScheduleState = {
   resourceManagerOpen: boolean;
   highlightedTaskIds: Set<string>;
   setSettings: (partial: Partial<ScheduleSettings>) => void;
+  setVisitDate: (visitDate: string) => void;
   moveTask: (taskId: string, newStartMin: number) => void;
   moveSubjectWhole: (subjectId: string, deltaMin: number) => void;
   addSubject: (
@@ -200,6 +201,21 @@ export const useScheduleStore = create<ScheduleState>()(
           }
           return { settings: next };
         });
+      },
+
+      setVisitDate: (visitDate) => {
+        const next = visitDate.trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(next)) {
+          return;
+        }
+        set((state) => ({
+          settings: { ...state.settings, visitDate: next },
+          subjects: state.subjects.map((subject) =>
+            subject.visitDate === state.settings.visitDate
+              ? { ...subject, visitDate: next }
+              : subject
+          ),
+        }));
       },
 
       moveTask: (taskId, newStartMin) => {
