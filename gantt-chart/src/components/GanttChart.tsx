@@ -255,7 +255,7 @@ export function GanttChart({
                         widthPx={widthPx}
                         rowHeight={ROW_HEIGHT}
                         labelLayout={
-                          labelLayouts.get(task.id) ?? { mode: 'inside' }
+                          labelLayouts.get(task.id) ?? { mode: 'stacked' }
                         }
                         risk={taskRiskMap.get(task.id)}
                         highlighted={highlightedTaskIds.has(task.id)}

@@ -7,7 +7,7 @@ export const TASK_LABEL_INSIDE_MIN_PX = 100;
 /** 极短环节仍保留可点击/可拖拽的最小条宽 */
 export const TASK_BAR_MIN_PX = 10;
 
-export type TaskLabelMode = 'inside' | 'above';
+export type TaskLabelMode = 'stacked';
 
 export type TaskLabelLayout = {
   mode: TaskLabelMode;
@@ -19,11 +19,12 @@ export type TaskGeometry = {
   widthPx: number;
 };
 
-const VISIT_POINT_BAR_LABELS: Record<Exclude<VisitPoint, 'Other'>, string> = {
+const VISIT_POINT_BAR_LABELS: Record<VisitPoint, string> = {
   BL: 'BL',
   Immediate: '即刻',
   '30min': '30分钟',
   '1h': '1小时',
+  Other: '其他',
 };
 
 const CONTENT_PREFIX_PATTERNS = [
@@ -35,21 +36,30 @@ const CONTENT_PREFIX_PATTERNS = [
   /^1小时\s*/,
 ];
 
-export function shouldShowOutsideLabel(widthPx: number): boolean {
-  return widthPx < TASK_LABEL_INSIDE_MIN_PX;
+export function shouldShowOutsideLabel(_widthPx: number): boolean {
+  return true;
 }
 
 export function getTaskBarDisplayWidth(widthPx: number): number {
   return Math.max(widthPx, TASK_BAR_MIN_PX);
 }
 
-/** 窄条内：访视点缩写；无访视点时显示环节内容缩写 */
-export function getVisitPointBarLabel(task: Task): string {
-  if (task.visitPoint && task.visitPoint !== 'Other') {
+/** 上条：时间节点。无访视点时从名称推断，再没有则显示 — */
+export function getVisitPointHeaderLabel(task: Task): string {
+  if (task.visitPoint) {
     return VISIT_POINT_BAR_LABELS[task.visitPoint];
   }
-  const content = getTaskContentLabel(task);
-  return content.length > 4 ? `${content.slice(0, 3)}…` : content;
+  const name = task.name.trim();
+  if (/^BL\b/i.test(name)) return 'BL';
+  if (/^即刻/.test(name)) return '即刻';
+  if (/^30\s*min/i.test(name) || /^30分钟/.test(name)) return '30分钟';
+  if (/^1\s*h\b/i.test(name) || /^1小时/.test(name)) return '1小时';
+  return '—';
+}
+
+/** @deprecated 与 getVisitPointHeaderLabel 相同，保留给旧调用 */
+export function getVisitPointBarLabel(task: Task): string {
+  return getVisitPointHeaderLabel(task);
 }
 
 /** 去掉名称中的访视点前缀，仅保留项目内容 */
@@ -64,18 +74,14 @@ export function getTaskContentLabel(task: Task): string {
   return name;
 }
 
-/** 窄条一律在上方完整展示项目内容（允许与相邻标签重叠） */
+/** 全部环节统一上下两层：上时间节点、下具体内容 */
 export function computeTaskLabelLayouts(
   geometries: TaskGeometry[]
 ): Map<string, TaskLabelLayout> {
   const result = new Map<string, TaskLabelLayout>();
-
-  for (const { task, widthPx } of geometries) {
-    result.set(task.id, {
-      mode: shouldShowOutsideLabel(widthPx) ? 'above' : 'inside',
-    });
+  for (const { task } of geometries) {
+    result.set(task.id, { mode: 'stacked' });
   }
-
   return result;
 }
 
@@ -84,8 +90,9 @@ export function buildTaskTooltipLines(task: Task): string[] {
     `${task.subjectId} · ${task.name}`,
     `${formatMinuteRange(task.startMin, task.endMin)}（${task.durationMin} 分钟）`,
   ];
-  if (task.visitPoint && task.visitPoint !== 'Other') {
-    lines.push(`访视点 ${VISIT_POINT_BAR_LABELS[task.visitPoint]}`);
+  const visitLabel = getVisitPointHeaderLabel(task);
+  if (visitLabel !== '—') {
+    lines.push(`时间节点 ${visitLabel}`);
   }
   if (task.resourceIds.length > 0) {
     lines.push(`资源 ${task.resourceIds.join(', ')}`);

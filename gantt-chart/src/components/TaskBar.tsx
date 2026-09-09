@@ -30,7 +30,7 @@ export function TaskBar({
   leftPx,
   widthPx,
   rowHeight,
-  labelLayout,
+  labelLayout: _labelLayout,
   risk,
   highlighted,
   onSelect,
@@ -63,9 +63,8 @@ export function TaskBar({
   const barWidth = getTaskBarDisplayWidth(widthPx);
   const contentLabel = getTaskContentLabel(task);
   const visitPointLabel = getVisitPointBarLabel(task);
-  const isNarrow = labelLayout.mode === 'above';
-  const barTop = isNarrow ? 18 : 4;
-  const barHeight = rowHeight - (isNarrow ? 22 : 8);
+  const barTop = 18;
+  const barHeight = rowHeight - 22;
 
   const dragTransform = transform
     ? CSS.Translate.toString({ ...transform, y: 0 })
@@ -83,7 +82,7 @@ export function TaskBar({
     <div
       ref={setNodeRef}
       id={`task-bar-${task.id}`}
-      className={`task-bar ${isNarrow ? 'compact' : ''} ${isDragging ? 'dragging' : ''} ${task.locked ? 'locked' : ''}`}
+      className={`task-bar compact ${isDragging ? 'dragging' : ''} ${task.locked ? 'locked' : ''}`}
       style={{
         left: leftPx,
         width: barWidth,
@@ -105,11 +104,7 @@ export function TaskBar({
       {...attributes}
     >
       {task.locked && <LockOutlined className="task-lock" />}
-      {labelLayout.mode === 'inside' ? (
-        <span className="task-label">{contentLabel}</span>
-      ) : (
-        <span className="task-chip">{visitPointLabel}</span>
-      )}
+      <span className="task-label">{contentLabel}</span>
     </div>
   );
 
@@ -118,25 +113,23 @@ export function TaskBar({
       <Tooltip title={tooltip} mouseEnterDelay={0.2}>
         {bar}
       </Tooltip>
-      {isNarrow && (
-        <div
-          className="task-above-label"
-          style={{
-            left: leftPx,
-            top: 0,
-            width: barWidth,
-            background: colorWithAlpha(taskColor, 0.22),
-            borderColor: colorWithAlpha(taskColor, 0.42),
-            color: '#262626',
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(task.id);
-          }}
-        >
-          {contentLabel}
-        </div>
-      )}
+      <div
+        className="task-above-label"
+        style={{
+          left: leftPx,
+          top: 0,
+          width: barWidth,
+          background: colorWithAlpha(taskColor, 0.22),
+          borderColor: colorWithAlpha(taskColor, 0.42),
+          color: '#262626',
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(task.id);
+        }}
+      >
+        {visitPointLabel}
+      </div>
     </>
   );
 }

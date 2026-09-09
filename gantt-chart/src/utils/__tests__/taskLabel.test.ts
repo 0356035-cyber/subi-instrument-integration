@@ -5,8 +5,7 @@ import {
   getTaskBarDisplayWidth,
   getTaskContentLabel,
   getVisitPointBarLabel,
-  shouldShowOutsideLabel,
-  TASK_LABEL_INSIDE_MIN_PX,
+  getVisitPointHeaderLabel,
 } from '../taskLabel';
 
 const baseTask: Task = {
@@ -27,32 +26,30 @@ const baseTask: Task = {
   isElastic: false,
 };
 
-const narrowTask = (id: string, name: string, visitPoint: Task['visitPoint']): Task => ({
-  ...baseTask,
-  id,
-  name,
-  visitPoint,
-});
-
 describe('taskLabel helpers', () => {
-  it('shows compact labels for narrow bars', () => {
-    expect(shouldShowOutsideLabel(TASK_LABEL_INSIDE_MIN_PX - 1)).toBe(true);
-    expect(shouldShowOutsideLabel(TASK_LABEL_INSIDE_MIN_PX)).toBe(false);
-  });
-
   it('keeps a minimum visible bar width', () => {
     expect(getTaskBarDisplayWidth(3)).toBeGreaterThanOrEqual(10);
     expect(getTaskBarDisplayWidth(120)).toBe(120);
   });
 
-  it('shows visit point inside narrow bars', () => {
-    expect(getVisitPointBarLabel(baseTask)).toBe('BL');
+  it('puts visit point on the header for every bar', () => {
+    expect(getVisitPointHeaderLabel(baseTask)).toBe('BL');
     expect(
-      getVisitPointBarLabel({ ...baseTask, visitPoint: 'Immediate', name: '即刻 VISIA' })
+      getVisitPointHeaderLabel({ ...baseTask, visitPoint: 'Immediate', name: '即刻 VISIA' })
     ).toBe('即刻');
     expect(
-      getVisitPointBarLabel({ ...baseTask, visitPoint: '30min', name: '30min TEWL' })
+      getVisitPointHeaderLabel({ ...baseTask, visitPoint: '30min', name: '30min TEWL' })
     ).toBe('30分钟');
+    expect(
+      getVisitPointHeaderLabel({ ...baseTask, visitPoint: '1h', name: '1h 问卷' })
+    ).toBe('1小时');
+    expect(
+      getVisitPointHeaderLabel({ ...baseTask, visitPoint: 'Other', name: '环境适应' })
+    ).toBe('其他');
+    expect(
+      getVisitPointHeaderLabel({ ...baseTask, visitPoint: undefined, name: '问卷' })
+    ).toBe('—');
+    expect(getVisitPointBarLabel(baseTask)).toBe('BL');
   });
 
   it('strips visit point prefix from content label', () => {
@@ -69,20 +66,12 @@ describe('taskLabel helpers', () => {
     ).toBe('环境适应');
   });
 
-  it('always uses above labels for narrow bars', () => {
+  it('uses stacked labels for both narrow and wide bars', () => {
     const layouts = computeTaskLabelLayouts([
-      { task: narrowTask('a', 'BL VISIA', 'BL'), leftPx: 0, widthPx: 20 },
-      { task: narrowTask('b', 'BL TEWL', 'BL'), leftPx: 22, widthPx: 20 },
+      { task: { ...baseTask, id: 'a' }, leftPx: 0, widthPx: 20 },
+      { task: { ...baseTask, id: 'b' }, leftPx: 0, widthPx: 140 },
     ]);
-
-    expect(layouts.get('a')?.mode).toBe('above');
-    expect(layouts.get('b')?.mode).toBe('above');
-  });
-
-  it('uses inside labels for wide bars', () => {
-    const layouts = computeTaskLabelLayouts([
-      { task: baseTask, leftPx: 0, widthPx: 140 },
-    ]);
-    expect(layouts.get('t1')?.mode).toBe('inside');
+    expect(layouts.get('a')?.mode).toBe('stacked');
+    expect(layouts.get('b')?.mode).toBe('stacked');
   });
 });
