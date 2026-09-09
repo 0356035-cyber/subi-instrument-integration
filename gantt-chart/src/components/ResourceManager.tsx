@@ -40,6 +40,7 @@ export function ResourceManagerModal() {
   const resources = useScheduleStore((s) => s.resources);
   const projects = useScheduleStore((s) => s.projects);
   const saveResources = useScheduleStore((s) => s.saveResources);
+  const clearAllResources = useScheduleStore((s) => s.clearAllResources);
 
   const [draft, setDraft] = useState<DraftResource[]>([]);
 
@@ -264,6 +265,22 @@ export function ResourceManagerModal() {
         <Button type="dashed" icon={<PlusOutlined />} onClick={addResource}>
           添加资源
         </Button>
+        <Popconfirm
+          title="清空全部资源？"
+          description="将删除设备、人员、区域等全部资源，并清除各流程环节上的占用引用。"
+          okText="清空"
+          okButtonProps={{ danger: true }}
+          cancelText="取消"
+          onConfirm={() => {
+            clearAllResources();
+            setDraft([]);
+            message.success('资源已全部清空');
+          }}
+        >
+          <Button danger icon={<DeleteOutlined />} disabled={draft.length === 0}>
+            清空全部资源
+          </Button>
+        </Popconfirm>
         <Tag color="blue">{draft.filter((r) => r.active).length} 个启用</Tag>
         <Tag>{draft.length} 个总计</Tag>
       </Space>

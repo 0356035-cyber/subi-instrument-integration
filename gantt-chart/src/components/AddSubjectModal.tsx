@@ -1,5 +1,5 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Alert, Button, Descriptions, Form, Input, InputNumber, Modal, Segmented, Table, TimePicker, message } from 'antd';
+import { Alert, Button, Descriptions, Form, Input, InputNumber, Modal, Segmented, Select, Table, TimePicker, message } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { type OptimizedInsertPlan, type OptimizedSubjectPlan, useScheduleStore } from '../store/scheduleStore';
@@ -11,6 +11,9 @@ export function AddSubjectButton() {
   const [globalPreview, setGlobalPreview] = useState<OptimizedInsertPlan | null>(null);
   const [form] = Form.useForm();
   const { addSubject, previewOptimizedSubjects, commitOptimizedSubjects, previewInsertAndExactReschedule, commitInsertAndExactReschedule, subjects, settings } = useScheduleStore();
+  const projectSubjects = subjects.filter(
+    (subject) => subject.projectId === settings.activeProjectId
+  );
 
   const suggestedArrival = () => {
     if (subjects.length === 0) return dayjs().hour(9).minute(0);
@@ -23,6 +26,7 @@ export function AddSubjectButton() {
     form.setFieldsValue({
       name: '',
       arrival: suggestedArrival(),
+      copyFromSubjectId: undefined,
       mode: 'single',
       count: 1,
       rangeStart: suggestedArrival(),
@@ -87,7 +91,8 @@ export function AddSubjectButton() {
     addSubject(
       values.name?.trim() || undefined,
       arrivalMin,
-      settings.activeProjectId
+      settings.activeProjectId,
+      values.copyFromSubjectId
     );
     setOpen(false);
     form.resetFields();
@@ -182,9 +187,22 @@ export function AddSubjectButton() {
                   <Form.Item
             name="name"
             label="姓名（可选）"
-            extra="将按当前项目流程模板自动生成排程"
           >
             <Input placeholder="受试者姓名" maxLength={32} />
+          </Form.Item>
+          <Form.Item
+            name="copyFromSubjectId"
+            label="复制已有受试者流程"
+            extra="选择后，新受试者套用该受试者当前甘特图上的环节顺序、耗时和相对间隔。不选则使用项目流程模板。批量自动排程仍使用项目模板，可先把优化后的流程同步到项目。"
+          >
+            <Select
+              allowClear
+              placeholder="使用项目流程模板（默认）"
+              options={projectSubjects.map((subject) => ({
+                value: subject.id,
+                label: `${subject.id} ${subject.name ?? ''}`.trim(),
+              }))}
+            />
           </Form.Item>
           <Form.Item
             name="arrival"

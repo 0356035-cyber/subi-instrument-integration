@@ -18,7 +18,7 @@ import {
   minutesToPixels,
 } from '../utils/layout';
 import { computeTaskLabelLayouts } from '../utils/taskLabel';
-import { getTaskDisplayColor } from '../utils/taskType';
+import { getTaskBarColor } from '../utils/taskType';
 import { TaskBar } from './TaskBar';
 import { TimeAxis } from './TimeAxis';
 
@@ -33,6 +33,7 @@ type GanttChartProps = {
     viewEndMin: number;
     displayGranularityMin: import('../types').DisplayGranularity;
     dragMode: DragMode;
+    timelineScale?: number;
   };
   taskRiskMap: Map<string, TaskRiskState>;
   highlightedTaskIds: Set<string>;
@@ -108,13 +109,13 @@ export function GanttChart({
   onMoveSubjectWhole,
 }: GanttChartProps) {
   const granularity = settings.displayGranularityMin;
+  const timelineScale = settings.timelineScale ?? 2;
   const timelineWidthPx = getTimelineWidthPx(
     settings.viewStartMin,
     settings.viewEndMin,
-    granularity
+    granularity,
+    timelineScale
   );
-  const pxPerMin = getPixelsPerMinute(granularity);
-
   const rows = useMemo(
     () =>
       subjects.map((s) => ({
@@ -158,7 +159,7 @@ export function GanttChart({
     (event: DragEndEvent) => {
       const { active, delta } = event;
       const id = String(active.id);
-      const deltaMin = deltaPixelsToMinutes(delta.x, granularity);
+      const deltaMin = deltaPixelsToMinutes(delta.x, granularity, timelineScale);
 
       if (id.startsWith('row-')) {
         onMoveSubjectWhole(id.replace('row-', ''), deltaMin);
@@ -169,7 +170,7 @@ export function GanttChart({
       if (!task) return;
       onMoveTask(id, task.startMin + deltaMin);
     },
-    [tasks, granularity, onMoveTask, onMoveSubjectWhole]
+    [tasks, granularity, timelineScale, onMoveTask, onMoveSubjectWhole]
   );
 
   return (
@@ -190,6 +191,7 @@ export function GanttChart({
             granularityMin={granularity}
             labelWidth={LABEL_WIDTH}
             timelineWidthPx={timelineWidthPx}
+            timelineScale={timelineScale}
           />
           <div className="gantt-body">
             {rows.map((row) => (
@@ -225,9 +227,12 @@ export function GanttChart({
                         const leftPx = minutesToPixels(
                           task.startMin,
                           settings.viewStartMin,
-                          granularity
+                          granularity,
+                          timelineScale
                         );
-                        const widthPx = (task.endMin - task.startMin) * pxPerMin;
+                        const widthPx =
+                          (task.endMin - task.startMin) *
+                          getPixelsPerMinute(granularity, timelineScale);
 
                         if (
                           task.endMin < settings.viewStartMin ||
@@ -245,7 +250,7 @@ export function GanttChart({
                       <TaskBar
                         key={task.id}
                         task={task}
-                        taskColor={getTaskDisplayColor(task.taskType)}
+                        taskColor={getTaskBarColor(task)}
                         leftPx={leftPx}
                         widthPx={widthPx}
                         rowHeight={ROW_HEIGHT}

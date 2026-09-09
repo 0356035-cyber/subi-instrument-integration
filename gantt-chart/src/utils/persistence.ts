@@ -63,6 +63,9 @@ export function deserializePersistedSchedule(
   ) {
     return null;
   }
+  if (typeof settings.timelineScale !== 'number') {
+    settings.timelineScale = 2;
+  }
 
   return {
     version: PERSISTENCE_VERSION,

@@ -2,10 +2,9 @@ import {
   DownloadOutlined,
   EditOutlined,
   ImportOutlined,
-  ReloadOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import { Button, Dropdown, Select, Space, TimePicker, Typography, message } from 'antd';
+import { Button, Dropdown, Select, Slider, Space, TimePicker, Typography, message } from 'antd';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { useRef } from 'react';
@@ -14,6 +13,7 @@ import { useScheduleStore } from '../store/scheduleStore';
 import { exportScheduleToCSV, exportScheduleToJSON, parseScheduleJSON } from '../utils/export';
 import { hhmmToMinutes } from '../utils/time';
 import { AddSubjectButton } from './AddSubjectModal';
+import { CloudSyncControls } from './CloudSyncControls';
 import { ResourceManagerButton } from './ResourceManager';
 import { WorkflowLegend } from './WorkflowLegend';
 import { OptimizeScheduleButton } from './OptimizeScheduleModal';
@@ -44,7 +44,6 @@ export function Toolbar() {
     settings,
     setSettings,
     runValidation,
-    resetSampleData,
     importSchedule,
     conflicts,
     projects,
@@ -141,6 +140,16 @@ export function Toolbar() {
                 })
               }
             />
+            <span className="toolbar-label">轴宽</span>
+            <Slider
+              min={1}
+              max={4}
+              step={0.5}
+              style={{ width: 120 }}
+              tooltip={{ formatter: (value) => `${value}×` }}
+              value={settings.timelineScale ?? 2}
+              onChange={(value) => setSettings({ timelineScale: value })}
+            />
             <span className="toolbar-label">显示粒度</span>
             <Select
               value={settings.displayGranularityMin}
@@ -203,9 +212,7 @@ export function Toolbar() {
             >
               检查冲突 {conflicts.length > 0 ? `(${conflicts.length})` : ''}
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={resetSampleData}>
-              重置示例数据
-            </Button>
+            <CloudSyncControls />
           </Space>
         </div>
       </div>

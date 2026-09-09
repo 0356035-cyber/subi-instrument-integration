@@ -50,6 +50,7 @@ export const defaultSettings: ScheduleSettings = {
   dragMode: 'single',
   visitDate: '2026-07-08',
   activeProjectId: 'project-skin-01',
+  timelineScale: 2,
 };
 
 const SAMPLE_PROJECT: Project = {

@@ -64,7 +64,7 @@ export function buildTasksFromWorkflow(
       isElastic: step.scheduling === 'elastic_fill',
       movable: true,
       status: 'planned',
-      color: getTaskDisplayColor(step.taskType),
+      color: step.color || getTaskDisplayColor(step.taskType),
     };
 
     tasks.push(task);
@@ -100,14 +100,14 @@ export function rebuildProjectTasks(
 }
 
 export function createDefaultStep(order: number): WorkflowStepTemplate {
-  const id = `step-${Date.now()}`;
+  const id = `step-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   return {
     id,
     order,
     name: '新环节',
     taskType: '自定义环节',
     visitPoint: 'Other',
-    resourceIds: ['Operator_A'],
+    resourceIds: [],
     durationMin: 5,
     color: '#8c8c8c',
     scheduling: 'sequential',
@@ -118,4 +118,60 @@ export function normalizeStepOrders(
   steps: WorkflowStepTemplate[]
 ): WorkflowStepTemplate[] {
   return sortedSteps(steps).map((s, i) => ({ ...s, order: i }));
+}
+
+/** 顺序衔接环节按新顺序重绑 dependsOn，锚点类环节保持原锚点。 */
+export function relinkSequentialDependencies(
+  steps: WorkflowStepTemplate[]
+): WorkflowStepTemplate[] {
+  const ordered = normalizeStepOrders(steps);
+  const ids = new Set(ordered.map((step) => step.id));
+  return ordered.map((step, index) => {
+    if (step.scheduling !== 'sequential') {
+      return {
+        ...step,
+        anchorStepId:
+          step.anchorStepId && ids.has(step.anchorStepId)
+            ? step.anchorStepId
+            : undefined,
+        dependsOnStepId:
+          step.dependsOnStepId && ids.has(step.dependsOnStepId)
+            ? step.dependsOnStepId
+            : undefined,
+      };
+    }
+    const prev = ordered[index - 1];
+    return {
+      ...step,
+      dependsOnStepId: prev?.id,
+    };
+  });
+}
+
+export function reorderWorkflowSteps(
+  steps: WorkflowStepTemplate[],
+  fromId: string,
+  toId: string
+): WorkflowStepTemplate[] {
+  if (fromId === toId) return normalizeStepOrders(steps);
+  const list = normalizeStepOrders(steps);
+  const from = list.findIndex((step) => step.id === fromId);
+  const to = list.findIndex((step) => step.id === toId);
+  if (from < 0 || to < 0) return list;
+  const next = [...list];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return relinkSequentialDependencies(next.map((step, index) => ({ ...step, order: index })));
+}
+
+export function moveWorkflowStep(
+  steps: WorkflowStepTemplate[],
+  id: string,
+  dir: -1 | 1
+): WorkflowStepTemplate[] {
+  const list = normalizeStepOrders(steps);
+  const idx = list.findIndex((step) => step.id === id);
+  const target = idx + dir;
+  if (idx < 0 || target < 0 || target >= list.length) return list;
+  return reorderWorkflowSteps(list, id, list[target].id);
 }

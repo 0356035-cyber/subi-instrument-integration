@@ -20,12 +20,17 @@ import {
   type PersistedScheduleState,
 } from '../utils/persistence';
 import { createSubject, generateNextSubjectId } from '../utils/subjectFactory';
+import {
+  cloneSubjectTimeline,
+  inferWorkflowFromSubjectTasks,
+} from '../utils/subjectWorkflow';
 import { planBatchSchedule, type AutoSchedulePlan } from '../utils/autoSchedule';
 import { solveExactSchedule } from '../utils/exactOptimizer';
 import {
   buildTasksFromWorkflow,
   normalizeStepOrders,
   rebuildProjectTasks,
+  relinkSequentialDependencies,
 } from '../utils/workflow';
 
 type ScheduleState = {
@@ -47,8 +52,10 @@ type ScheduleState = {
   addSubject: (
     name: string | undefined,
     arrivalMin: number,
-    projectId: string
+    projectId: string,
+    copyFromSubjectId?: string
   ) => void;
+  applySubjectWorkflowToProject: (sourceSubjectId: string) => boolean;
   previewOptimizedSubjects: (
     count: number,
     startMin: number,
@@ -86,6 +93,10 @@ type ScheduleState = {
     resources: Resource[],
     idChanges?: Map<string, string>
   ) => void;
+  mergeResources: (additions: Resource[]) => void;
+  replaceResources: (resources: Resource[]) => void;
+  clearProjectWorkflow: (projectId: string) => void;
+  clearAllResources: () => void;
   selectTask: (taskId: string | null) => void;
   highlightTasks: (taskIds: string[]) => void;
   clearHighlight: () => void;
@@ -215,7 +226,7 @@ export const useScheduleStore = create<ScheduleState>()(
         set({ tasks: updated, ...validation });
       },
 
-      addSubject: (name, arrivalMin, projectId) => {
+      addSubject: (name, arrivalMin, projectId, copyFromSubjectId) => {
         const { subjects, tasks, resources, settings, projects } = get();
         const project = projects.find((p) => p.id === projectId);
         if (!project) return;
@@ -228,11 +239,21 @@ export const useScheduleStore = create<ScheduleState>()(
           projectId,
           name
         );
-        const newTasks = buildTasksFromWorkflow(
-          id,
-          arrivalMin,
-          project.workflowSteps
-        );
+        const source = copyFromSubjectId
+          ? subjects.find((item) => item.id === copyFromSubjectId)
+          : undefined;
+        const sourceTasks = source
+          ? tasks.filter((task) => task.subjectId === source.id)
+          : [];
+        const newTasks =
+          source && sourceTasks.length > 0
+            ? cloneSubjectTimeline(
+                sourceTasks,
+                source.arrivalMin,
+                id,
+                arrivalMin
+              )
+            : buildTasksFromWorkflow(id, arrivalMin, project.workflowSteps);
         const updatedTasks = [...tasks, ...newTasks];
         const validation = revalidate(updatedTasks, resources);
         set({
@@ -240,6 +261,51 @@ export const useScheduleStore = create<ScheduleState>()(
           tasks: updatedTasks,
           ...validation,
         });
+      },
+
+      applySubjectWorkflowToProject: (sourceSubjectId) => {
+        const { subjects, tasks, resources, projects } = get();
+        const source = subjects.find((item) => item.id === sourceSubjectId);
+        if (!source) return false;
+        const project = projects.find((item) => item.id === source.projectId);
+        if (!project) return false;
+        const sourceTasks = tasks.filter((task) => task.subjectId === source.id);
+        if (sourceTasks.length === 0) return false;
+
+        const inferred = inferWorkflowFromSubjectTasks(
+          sourceTasks,
+          project.workflowSteps
+        );
+        const updatedProjects = projects.map((item) =>
+          item.id === project.id ? { ...item, workflowSteps: inferred } : item
+        );
+        const targets = subjects.filter(
+          (item) =>
+            item.projectId === project.id &&
+            item.id !== source.id &&
+            item.status !== 'completed' &&
+            item.status !== 'cancelled'
+        );
+        const targetIds = new Set(targets.map((item) => item.id));
+        let updatedTasks = tasks.filter((task) => !targetIds.has(task.subjectId));
+        for (const target of targets) {
+          updatedTasks = [
+            ...updatedTasks,
+            ...cloneSubjectTimeline(
+              sourceTasks,
+              source.arrivalMin,
+              target.id,
+              target.arrivalMin
+            ),
+          ];
+        }
+        const validation = revalidate(updatedTasks, resources);
+        set({
+          projects: updatedProjects,
+          tasks: updatedTasks,
+          ...validation,
+        });
+        return true;
       },
 
       previewOptimizedSubjects: (count, startMin, endMin, stepMin, projectId) => {
@@ -460,7 +526,9 @@ export const useScheduleStore = create<ScheduleState>()(
 
       saveProjectWorkflow: (projectId, steps) => {
         const { projects, subjects, tasks, resources } = get();
-        const normalized = normalizeStepOrders(steps);
+        const normalized = relinkSequentialDependencies(
+          normalizeStepOrders(steps)
+        );
         const updatedProjects = projects.map((p) =>
           p.id === projectId ? { ...p, workflowSteps: normalized } : p
         );
@@ -483,6 +551,57 @@ export const useScheduleStore = create<ScheduleState>()(
       openResourceManager: () => set({ resourceManagerOpen: true }),
 
       closeResourceManager: () => set({ resourceManagerOpen: false }),
+
+      mergeResources: (additions) => {
+        if (additions.length === 0) return;
+        const { resources } = get();
+        const existingIds = new Set(resources.map((resource) => resource.id));
+        const extra = additions.filter((resource) => !existingIds.has(resource.id));
+        if (extra.length === 0) return;
+        set({ resources: [...resources, ...extra] });
+      },
+
+      replaceResources: (resources) => {
+        set({ resources });
+      },
+
+      clearProjectWorkflow: (projectId) => {
+        const { projects, subjects, tasks, resources } = get();
+        if (!projects.some((project) => project.id === projectId)) return;
+        const updatedProjects = projects.map((project) =>
+          project.id === projectId ? { ...project, workflowSteps: [] } : project
+        );
+        const project = updatedProjects.find((item) => item.id === projectId)!;
+        const updatedTasks = rebuildProjectTasks(subjects, tasks, project);
+        const validation = revalidate(updatedTasks, resources);
+        set({
+          projects: updatedProjects,
+          tasks: updatedTasks,
+          ...validation,
+        });
+      },
+
+      clearAllResources: () => {
+        const { projects, subjects, tasks } = get();
+        const updatedProjects = projects.map((project) => ({
+          ...project,
+          workflowSteps: project.workflowSteps.map((step) => ({
+            ...step,
+            resourceIds: [],
+          })),
+        }));
+        let updatedTasks = tasks;
+        for (const project of updatedProjects) {
+          updatedTasks = rebuildProjectTasks(subjects, updatedTasks, project);
+        }
+        const validation = revalidate(updatedTasks, []);
+        set({
+          resources: [],
+          projects: updatedProjects,
+          tasks: updatedTasks,
+          ...validation,
+        });
+      },
 
       saveResources: (resources, idChanges) => {
         const { projects, subjects, tasks } = get();

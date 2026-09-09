@@ -108,6 +108,8 @@ export type ScheduleSettings = {
   visitDate: string;
   /** 当前查看/编辑的项目 */
   activeProjectId: string;
+  /** 时间轴横向缩放，1 为基准，最大 4 */
+  timelineScale: number;
 };
 
 export type ConflictType =

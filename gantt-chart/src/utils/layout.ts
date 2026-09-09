@@ -1,52 +1,69 @@
 import type { DisplayGranularity } from '../types';
 
-/** 每个显示刻度槽的像素宽度（显示粒度越细，单槽越窄以保持可滚动总宽度合理） */
+/** 每个显示刻度槽的基准像素宽度；再乘时间轴缩放。 */
 const SLOT_WIDTH_BY_GRANULARITY: Record<DisplayGranularity, number> = {
-  1: 28,
-  2: 32,
-  5: 48,
-  10: 56,
-  15: 64,
-  30: 80,
+  1: 36,
+  2: 44,
+  5: 72,
+  10: 88,
+  15: 104,
+  30: 128,
 };
 
-export function getSlotWidthPx(granularityMin: DisplayGranularity): number {
-  return SLOT_WIDTH_BY_GRANULARITY[granularityMin];
+export function clampTimelineScale(scale?: number): number {
+  if (scale == null || !Number.isFinite(scale)) return 2;
+  return Math.min(4, Math.max(1, scale));
 }
 
-export function getPixelsPerMinute(granularityMin: DisplayGranularity): number {
-  return getSlotWidthPx(granularityMin) / granularityMin;
+export function getSlotWidthPx(
+  granularityMin: DisplayGranularity,
+  scale = 1
+): number {
+  return Math.round(
+    SLOT_WIDTH_BY_GRANULARITY[granularityMin] * clampTimelineScale(scale)
+  );
+}
+
+export function getPixelsPerMinute(
+  granularityMin: DisplayGranularity,
+  scale = 1
+): number {
+  return getSlotWidthPx(granularityMin, scale) / granularityMin;
 }
 
 export function getTimelineWidthPx(
   viewStartMin: number,
   viewEndMin: number,
-  granularityMin: DisplayGranularity
+  granularityMin: DisplayGranularity,
+  scale = 1
 ): number {
   const duration = viewEndMin - viewStartMin;
   const slotCount = duration / granularityMin;
-  return slotCount * getSlotWidthPx(granularityMin);
+  return slotCount * getSlotWidthPx(granularityMin, scale);
 }
 
 export function minutesToPixels(
   minutes: number,
   viewStartMin: number,
-  granularityMin: DisplayGranularity
+  granularityMin: DisplayGranularity,
+  scale = 1
 ): number {
-  return (minutes - viewStartMin) * getPixelsPerMinute(granularityMin);
+  return (minutes - viewStartMin) * getPixelsPerMinute(granularityMin, scale);
 }
 
 export function pixelsToMinutes(
   pixels: number,
   viewStartMin: number,
-  granularityMin: DisplayGranularity
+  granularityMin: DisplayGranularity,
+  scale = 1
 ): number {
-  return viewStartMin + pixels / getPixelsPerMinute(granularityMin);
+  return viewStartMin + pixels / getPixelsPerMinute(granularityMin, scale);
 }
 
 export function deltaPixelsToMinutes(
   deltaPx: number,
-  granularityMin: DisplayGranularity
+  granularityMin: DisplayGranularity,
+  scale = 1
 ): number {
-  return deltaPx / getPixelsPerMinute(granularityMin);
+  return deltaPx / getPixelsPerMinute(granularityMin, scale);
 }

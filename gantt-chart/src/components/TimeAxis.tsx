@@ -8,6 +8,7 @@ type TimeAxisProps = {
   granularityMin: DisplayGranularity;
   labelWidth: number;
   timelineWidthPx: number;
+  timelineScale?: number;
 };
 
 export function TimeAxis({
@@ -16,9 +17,10 @@ export function TimeAxis({
   granularityMin,
   labelWidth,
   timelineWidthPx,
+  timelineScale = 2,
 }: TimeAxisProps) {
   const slots = generateTimeSlots(viewStartMin, viewEndMin, granularityMin);
-  const slotWidthPx = getSlotWidthPx(granularityMin);
+  const slotWidthPx = getSlotWidthPx(granularityMin, timelineScale);
 
   return (
     <div className="gantt-axis-row">

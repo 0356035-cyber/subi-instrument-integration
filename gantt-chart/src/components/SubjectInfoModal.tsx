@@ -1,5 +1,5 @@
-import { DeleteOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, TimePicker } from 'antd';
+import { DeleteOutlined, UserSwitchOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, TimePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import type { SubjectStatus } from '../types';
@@ -21,6 +21,7 @@ export function SubjectInfoModal() {
     subjects,
     updateSubject,
     deleteSubject,
+    applySubjectWorkflowToProject,
   } = useScheduleStore();
   const [form] = Form.useForm();
   const subject = subjects.find((s) => s.id === editingSubjectId);
@@ -62,18 +63,38 @@ export function SubjectInfoModal() {
       destroyOnClose
       footer={
         <div className="subject-modal-footer">
-          <Popconfirm
-            title="确定删除该受试者？"
-            description="将一并删除其全部排程任务，且不可恢复。"
-            onConfirm={handleDelete}
-            okText="删除"
-            cancelText="取消"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              删除受试者
-            </Button>
-          </Popconfirm>
+          <Space>
+            <Popconfirm
+              title="同步此受试者流程到项目？"
+              description="将按当前甘特图上的环节顺序和相对时间更新项目模板，并覆盖同项目中未完成、未取消的其他受试者排程。"
+              onConfirm={() => {
+                if (!subject) return;
+                const ok = applySubjectWorkflowToProject(subject.id);
+                if (ok) {
+                  message.success('已同步为项目流程，并应用到其他受试者');
+                  closeSubjectEditor();
+                } else {
+                  message.error('同步失败，请确认该受试者已有排程任务');
+                }
+              }}
+              okText="同步"
+              cancelText="取消"
+            >
+              <Button icon={<UserSwitchOutlined />}>同步流程到项目</Button>
+            </Popconfirm>
+            <Popconfirm
+              title="确定删除该受试者？"
+              description="将一并删除其全部排程任务，且不可恢复。"
+              onConfirm={handleDelete}
+              okText="删除"
+              cancelText="取消"
+              okButtonProps={{ danger: true }}
+            >
+              <Button danger icon={<DeleteOutlined />}>
+                删除受试者
+              </Button>
+            </Popconfirm>
+          </Space>
           <Space>
             <Button onClick={closeSubjectEditor}>取消</Button>
             <Button type="primary" onClick={handleOk}>

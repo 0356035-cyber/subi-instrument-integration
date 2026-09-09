@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_WORKFLOW_STEPS } from '../../data/defaultWorkflow';
 import {
   getDefaultColorForTaskType,
+  getTaskBarColor,
   getTaskTypeLabel,
   getTaskTypeLegendItems,
   isPresetTaskType,
@@ -21,6 +22,11 @@ describe('taskType', () => {
   it('returns default color for custom types', () => {
     expect(getDefaultColorForTaskType('皮肤镜')).toBe('#595959');
     expect(getDefaultColorForTaskType('visia')).toBe('#722ed1');
+  });
+
+  it('uses the task color on gantt bars instead of the type preset', () => {
+    expect(getTaskBarColor({ taskType: 'visia', color: '#eb2f96' })).toBe('#eb2f96');
+    expect(getTaskBarColor({ taskType: 'visia', color: '' })).toBe('#722ed1');
   });
 
   it('deduplicates legend items by task type', () => {

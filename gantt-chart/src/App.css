@@ -74,6 +74,22 @@ body {
   font-size: 13px;
 }
 
+.workflow-drag-handle {
+  cursor: grab;
+  color: #8c8c8c;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.workflow-drag-handle:active {
+  cursor: grabbing;
+}
+
+.workflow-row-drag-over td {
+  background: #e6f4ff !important;
+}
+
 .main-layout {
   background: transparent;
 }
