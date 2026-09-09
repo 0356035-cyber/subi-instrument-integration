@@ -61,6 +61,8 @@ docker load -i "$IMAGE_ARCHIVE"
 echo "Starting Compose services without rebuilding"
 cd "$TARGET"
 docker compose -f docker-compose.yml -f docker-compose.zspace.yml up -d --no-build
+echo "Recreating gantt nginx so bind-mounted dist and nginx.conf take effect"
+docker compose -f docker-compose.yml -f docker-compose.zspace.yml up -d --no-build --force-recreate gantt-chart
 
 echo "Waiting for backend health checks"
 for attempt in $(seq 1 24); do

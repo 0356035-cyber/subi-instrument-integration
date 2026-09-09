@@ -97,6 +97,8 @@ services:
     container_name: gantt_chart
     ports:
       - "8520:80"
+    environment:
+      - GANTT_PROXY_REV=2
     volumes:
       - ./gantt-chart/dist:/usr/share/nginx/html:ro
       - ./gantt-chart/nginx.conf:/etc/nginx/conf.d/default.conf:ro
